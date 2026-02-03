@@ -1,5 +1,5 @@
 {
-  "name": "quick-chatgpt",
+  "name": "chat",
   "version": "1.0.0",
   "description": "QuickGPT - Fast AI chat interface with markdown, export, and dark theme (Netlify + OpenAI)",
   "main": "index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jovylle/quick-chatgpt.git"
+    "url": "git+https://github.com/jovylle/chat.git"
   },
   "author": "jovylle",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jovylle/quick-chatgpt/issues"
+    "url": "https://github.com/jovylle/chat/issues"
   },
-  "homepage": "https://github.com/jovylle/quick-chatgpt#readme",
+  "homepage": "https://github.com/jovylle/chat#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "express": "^4.22.1",
