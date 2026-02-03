@@ -111,14 +111,43 @@
     }
     
     .sidebar.collapsed .sidebar-title,
-    .sidebar.collapsed .conversation-list,
-    .sidebar.collapsed #new-conversation-btn {
+    .sidebar.collapsed .conversation-list {
       opacity: 0;
       pointer-events: none;
     }
     
+    .sidebar.collapsed .sidebar-header {
+      justify-content: center;
+      padding: 16px 8px;
+    }
+    
     .sidebar.collapsed .sidebar-toggle {
+      margin: 0;
+    }
+    
+    /* Show icon-only new conversation button when collapsed */
+    .sidebar.collapsed #new-conversation-btn {
+      padding: 10px;
+      font-size: 20px;
       margin: 0 auto;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .sidebar.collapsed #new-conversation-btn span {
+      display: none;
+    }
+    
+    .sidebar.collapsed #new-conversation-btn::before {
+      content: "➕";
+    }
+    
+    /* Keep sidebar toggle visible when collapsed on desktop */
+    .sidebar.collapsed .sidebar-header .sidebar-toggle {
+      display: block;
     }
 
     .sidebar-header {
@@ -282,11 +311,28 @@
       text-align: center;
       font-size: 24px;
       font-weight: 600;
-      border-bottom: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
       backdrop-filter: blur(10px);
+      gap: 20px;
+    }
+    
+    .header-model-selector {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-left: 12px;
+    }
+    
+    .header-model-selector:hover {
+      background: var(--bg-secondary);
+      border-color: var(--text-secondary);
     }
 
     .header-left {
@@ -1340,11 +1386,17 @@
         <div class="header-left">
           <button class="sidebar-toggle" id="sidebar-toggle-mobile" aria-label="Toggle sidebar" style="background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: 20px; padding: 0 12px 0 0;">☰</button>
           <span>Ask Right Away!</span>
-          <div class="info-button">i</div>
-          <div class="info-panel">
-            <p>ChatGPT of OpenAI Model 3.5</p>
-            <p>github link:<a href="https://github.com/jovyllebermudez/quick-chatgpt">quick-chatgpt</a></p>
-          </div>
+          <select class="header-model-selector" id="header-model-selector" aria-label="Select AI model">
+            <optgroup label="OpenAI (Free)">
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16k</option>
+              <option value="gpt-4o-mini">GPT-4o Mini</option>
+            </optgroup>
+            <optgroup label="Claude (Free)">
+              <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
+              <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+            </optgroup>
+          </select>
         </div>
         <div class="header-actions">
           <button class="theme-toggle" id="settings-btn" title="Settings" aria-label="Settings" style="background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: 20px; padding: 8px 12px; border-radius: 8px; transition: background 0.2s;">⚙️</button>
@@ -1361,10 +1413,6 @@
               <button type="button" role="menuitem" id="import-conversations-btn">📤 Import</button>
             </div>
           </div>
-          <button class="clear-chat-btn" id="clear-chat-btn" aria-label="Start new chat">
-            <span>🗑️</span>
-            <span>New Chat</span>
-          </button>
         </div>
       </div>
     <div class="chat-wrapper" id="chat-wrapper">
@@ -1491,6 +1539,7 @@
     const THEME_KEY = 'quickgpt_theme';
     const ACTIVE_CONVO_KEY = 'quickgpt_active_conversation';
     const API_CONFIG_KEY = 'quickgpt_api_config';
+    const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
     const MAX_CHARS = 2000;
     
     // Conversation management
@@ -1524,6 +1573,7 @@
     const apiProviderSelect = document.getElementById('api-provider');
     const apiKeyInput = document.getElementById('api-key-input');
     const modelSelect = document.getElementById('model-select');
+    const headerModelSelect = document.getElementById('header-model-selector');
     const exportAllBtn = document.getElementById('export-all-btn');
     const importDataBtn = document.getElementById('import-data-btn');
     const importFileInput = document.getElementById('import-file-input');
@@ -1569,6 +1619,7 @@
       modelSelect.value = apiConfig.model;
       if (customModelSelect) customModelSelect.value = apiConfig.model;
       if (systemPromptTextarea) systemPromptTextarea.value = apiConfig.systemPrompt || '';
+      if (headerModelSelect) headerModelSelect.value = apiConfig.model;
     }
 
     // Settings Modal
@@ -1608,8 +1659,18 @@
     // Free model selector (always visible)
     modelSelect.addEventListener('change', () => {
       apiConfig.model = modelSelect.value;
+      if (headerModelSelect) headerModelSelect.value = modelSelect.value;
       saveApiConfig();
     });
+    
+    // Header model selector
+    if (headerModelSelect) {
+      headerModelSelect.addEventListener('change', () => {
+        apiConfig.model = headerModelSelect.value;
+        modelSelect.value = headerModelSelect.value;
+        saveApiConfig();
+      });
+    }
 
     // System prompt textarea
     if (systemPromptTextarea) {
@@ -1801,10 +1862,8 @@
         }
       });
       
-      // Auto-collapse sidebar on mobile after selecting conversation
-      if (window.innerWidth <= 1024) {
-        sidebar.classList.add('collapsed');
-      }
+      // On mobile, respect the user's sidebar preference
+      // (Don't auto-collapse, let them control it with the burger menu)
       
       // Render placeholder if empty
       if (convo.messages.length === 0) {
@@ -2320,7 +2379,7 @@
 
     sendButton.addEventListener('click', sendMessageHandler);
     stopButton.addEventListener('click', stopRequest);
-    clearChatBtn.addEventListener('click', clearChat);
+    if (clearChatBtn) clearChatBtn.addEventListener('click', clearChat);
     themeToggle.addEventListener('click', toggleTheme);
 
     exportChatBtn.addEventListener('click', (e) => {
@@ -2407,6 +2466,12 @@
     // Sidebar toggle
     function toggleSidebar() {
       sidebar.classList.toggle('collapsed');
+      const isCollapsed = sidebar.classList.contains('collapsed');
+      try {
+        localStorage.setItem(SIDEBAR_STATE_KEY, isCollapsed ? 'true' : 'false');
+      } catch (e) {
+        console.error('Failed to save sidebar state:', e);
+      }
     }
     sidebarToggle.addEventListener('click', toggleSidebar);
     sidebarToggleMobile.addEventListener('click', toggleSidebar);
@@ -2417,9 +2482,26 @@
     // Initialize
     loadApiConfig();
     
-    // Auto-collapse sidebar on mobile
-    if (window.innerWidth <= 1024) {
-      sidebar.classList.add('collapsed');
+    // Restore sidebar state or set default based on screen size
+    try {
+      const savedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+      if (savedState === 'true') {
+        // User previously collapsed it
+        sidebar.classList.add('collapsed');
+      } else if (savedState === 'false') {
+        // User previously expanded it, keep it expanded
+        sidebar.classList.remove('collapsed');
+      } else if (savedState === null) {
+        // First visit: auto-collapse ONLY on mobile, keep expanded on desktop
+        if (window.innerWidth <= 1024) {
+          sidebar.classList.add('collapsed');
+        }
+      }
+    } catch (e) {
+      // Fallback: auto-collapse on mobile only
+      if (window.innerWidth <= 1024) {
+        sidebar.classList.add('collapsed');
+      }
     }
     
     userInput.focus();
