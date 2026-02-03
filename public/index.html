@@ -50,9 +50,28 @@
       --accent-color: #3b82f6;
       --accent-hover: #2563eb;
       --success-color: #10b981;
+      --error-color: #ef4444;
       --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.3);
       --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4);
       --shadow-heavy: 0 8px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    html[data-theme="light"] {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e5e5e5;
+      --bg-message-ai: #f0f0f0;
+      --text-primary: #171717;
+      --text-secondary: #525252;
+      --text-muted: #737373;
+      --border-color: #d4d4d4;
+      --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.08);
+      --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --shadow-heavy: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    html[data-theme="light"] body {
+      background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 50%, #d4d4d4 100%);
     }
 
     * {
@@ -193,6 +212,92 @@
       box-shadow: var(--shadow-light);
     }
 
+    .user-message-inner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .user-message-text { flex: 1; word-break: break-word; }
+    .user-message-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+    .message-delete {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      opacity: 0.7;
+    }
+
+    .message-delete:hover { opacity: 1; background: rgba(255,255,255,0.3); }
+    .ai-message .message-delete { background: var(--bg-tertiary); color: var(--text-secondary); }
+    .ai-message .message-delete:hover { background: var(--error-color); color: white; }
+
+    .scroll-to-bottom-btn {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: var(--shadow-medium);
+      z-index: 100;
+      opacity: 0.95;
+      transition: opacity 0.2s;
+      display: none;
+    }
+
+    .scroll-to-bottom-btn:hover { opacity: 1; }
+    .scroll-to-bottom-btn.visible { display: block; animation: messageSlideIn 0.2s ease-out; }
+
+    .export-dropdown {
+      position: relative;
+    }
+
+    .export-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 4px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: var(--shadow-medium);
+      z-index: 200;
+      min-width: 140px;
+      padding: 4px;
+      display: none;
+    }
+
+    .export-menu.visible { display: block; }
+    .export-menu button {
+      display: block;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: left;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .export-menu button:hover { background: var(--accent-color); color: white; }
+
+    .toast-with-action { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .toast-with-action .toast-retry { background: rgba(255,255,255,0.3); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .toast-with-action .toast-retry:hover { background: rgba(255,255,255,0.5); }
+
     .ai-message {
       background: var(--bg-message-ai);
       color: var(--text-primary);
@@ -233,6 +338,57 @@
       transform: scale(1.05);
     }
 
+    .regenerate-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      opacity: 0.7;
+    }
+
+    .regenerate-btn:hover {
+      opacity: 1;
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .stop-btn {
+      padding: 16px 24px;
+      background: var(--error-color);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      min-width: 80px;
+      transition: all 0.2s ease;
+    }
+
+    .stop-btn:hover {
+      filter: brightness(1.1);
+    }
+
+    .theme-toggle {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
     .input-container {
       display: flex;
       align-items: center;
@@ -251,14 +407,19 @@
 
     #user-input {
       flex-grow: 1;
+      width: 100%;
+      min-height: 52px;
+      max-height: 200px;
       padding: 16px 20px;
       border: 2px solid var(--border-color);
       border-radius: 12px;
       font-size: 16px;
+      font-family: inherit;
       max-width: 600px;
       background: var(--bg-tertiary);
       color: var(--text-primary);
       transition: all 0.3s ease;
+      resize: vertical;
     }
 
     #user-input:focus {
@@ -312,6 +473,45 @@
       transform: none;
     }
 
+    #send-button .btn-spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+    }
+
+    .suggested-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+      padding: 0 20px;
+    }
+
+    .suggested-prompt {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 10px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .suggested-prompt:hover {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-light);
+    }
+
     .placeholder-message {
       color: var(--text-muted);
       margin: auto;
@@ -321,13 +521,27 @@
     }
 
     .loading-yet {
-      border: 3px solid var(--border-color);
-      border-top: 3px solid var(--accent-color);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--accent-color);
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-      margin: 0 auto;
+      animation: typingBounce 1.4s ease-in-out infinite;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
     }
 
     @keyframes spin {
@@ -455,7 +669,6 @@
       position: fixed;
       top: 20px;
       right: 20px;
-      background: var(--success-color);
       color: white;
       padding: 12px 20px;
       border-radius: 8px;
@@ -463,6 +676,10 @@
       z-index: 10000;
       animation: toastSlideIn 0.3s ease-out;
     }
+
+    .toast.toast-success,
+    .toast { background: var(--success-color); }
+    .toast.toast-error { background: var(--error-color); }
 
     @keyframes toastSlideIn {
       from {
@@ -499,6 +716,7 @@
       #user-input {
         font-size: 16px;
         padding: 12px 16px;
+        min-height: 44px;
       }
       
       #send-button {
@@ -521,113 +739,167 @@
         </div>
       </div>
       <div class="header-actions">
-        <button class="export-chat-btn" id="export-chat-btn" title="Export Chat">
-          <span>📥</span>
-        </button>
-        <button class="clear-chat-btn" id="clear-chat-btn">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark" aria-label="Toggle theme">🌙</button>
+        <div class="export-dropdown">
+          <button class="export-chat-btn" id="export-chat-btn" title="Export Chat" aria-label="Export chat" aria-haspopup="true" aria-expanded="false">
+            <span>📥</span>
+          </button>
+          <div class="export-menu" id="export-menu" role="menu">
+            <button type="button" role="menuitem" data-format="json">JSON</button>
+            <button type="button" role="menuitem" data-format="txt">TXT</button>
+            <button type="button" role="menuitem" data-format="md">Markdown</button>
+            <button type="button" role="menuitem" data-format="all">All formats</button>
+          </div>
+        </div>
+        <button class="clear-chat-btn" id="clear-chat-btn" aria-label="Start new chat">
           <span>🗑️</span>
           <span>New Chat</span>
         </button>
       </div>
     </div>
-    <div class="chat-wrapper">
-      <div class="chat-messages" id="chat-box">
-        <!-- content -->
-        <div class="placeholder-message">Start a conversation by typing a message...</div>
-        <!-- <div class="message ai-message loading-yet"></div> -->
-        <!-- <div class="message ai-message">AI: Hello! You can ask me anything.</div>
-        <div class="message user-message">User: What's the weather like today?</div> -->
+    <div class="chat-wrapper" id="chat-wrapper">
+      <button type="button" class="scroll-to-bottom-btn" id="scroll-to-bottom-btn" aria-label="Scroll to bottom">↓ New messages</button>
+      <div class="chat-messages" id="chat-box" role="log" aria-live="polite" aria-label="Chat messages">
+        <div class="placeholder-message" id="placeholder-wrap">
+          <span>Start a conversation by typing a message...</span>
+          <div class="suggested-prompts" id="suggested-prompts">
+            <button type="button" class="suggested-prompt" data-prompt="Explain quantum computing in simple terms">Explain quantum computing</button>
+            <button type="button" class="suggested-prompt" data-prompt="Write a short haiku about coding">Write a haiku</button>
+            <button type="button" class="suggested-prompt" data-prompt="Help me debug: my function returns undefined">Debug this code</button>
+            <button type="button" class="suggested-prompt" data-prompt="Summarize the key points of a long article">Summarize an article</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="input-container">
       <div class="input-wrapper">
-        <input id="user-input" type="text" placeholder="Type your message..." autofocus>
+        <textarea id="user-input" placeholder="Type your message... (Enter to send, Shift+Enter for new line)" autofocus aria-label="Message input" maxlength="2000" rows="1"></textarea>
         <div class="char-counter" id="char-counter">0 / 2000</div>
       </div>
-      <button id="send-button">Send</button>
+      <button id="send-button" type="button" aria-label="Send message">Send</button>
+      <button id="stop-button" type="button" class="stop-btn" aria-label="Stop generation" style="display: none;">Stop</button>
     </div>
   </div>
   <script>
+    const STORAGE_KEY = 'quickgpt_history';
+    const THEME_KEY = 'quickgpt_theme';
+    const MAX_CHARS = 2000;
     const messageHistory = [];
+    let currentAbortController = null;
+    let lastFailedUserMessage = null;
 
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
-    const placeholderMessage = document.querySelector('.placeholder-message');
+    const chatWrapper = document.getElementById('chat-wrapper');
     const sendButton = document.getElementById('send-button');
+    const stopButton = document.getElementById('stop-button');
     const clearChatBtn = document.getElementById('clear-chat-btn');
     const exportChatBtn = document.getElementById('export-chat-btn');
+    const exportMenu = document.getElementById('export-menu');
+    const scrollToBottomBtn = document.getElementById('scroll-to-bottom-btn');
+    const themeToggle = document.getElementById('theme-toggle');
     const charCounter = document.getElementById('char-counter');
 
-    // Marked.js will be loaded lazily when needed
+    function getPlaceholder() {
+      return document.getElementById('placeholder-wrap') || document.querySelector('.placeholder-message');
+    }
 
-    function sendMessageHandler() {
-      // Hide the placeholder message when the user sends the first message
-      if (placeholderMessage.style.display !== 'none') {
-        placeholderMessage.style.display = 'none';
+    function setSendLoading(loading) {
+      sendButton.disabled = loading;
+      sendButton.style.opacity = loading ? 0.6 : 1;
+      sendButton.style.display = loading ? 'none' : '';
+      stopButton.style.display = loading ? '' : 'none';
+      if (loading) {
+        sendButton.setAttribute('aria-busy', 'true');
+      } else {
+        sendButton.innerHTML = 'Send';
+        sendButton.removeAttribute('aria-busy');
       }
+    }
 
-      // Disable the send button and show loading indicator during sending
-      sendButton.disabled = true;
-      sendButton.style.opacity = 0.6;
-
-      const userMessage = userInput.value.trim();
-      if (!userMessage) return;
-
-      // Add user message
-      addUserMessage(userMessage);
-      
-      // Add loading message
-      const loadingMessageId = addLoadingMessage();
-      
-      userInput.value = '';
-
+    function doFetch(userMessage, loadingMessageId) {
+      currentAbortController = new AbortController();
       fetch('/.netlify/functions/chat', {
         method: 'POST',
         body: JSON.stringify({ message: userMessage, history: messageHistory }),
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        signal: currentAbortController.signal
       })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('HTTP Error: ' + response.statusText);
+        .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+        .then(async ({ ok, status, data }) => {
+          const errorMsg = data.error || (ok ? null : 'Request failed');
+          const aiMessage = ok ? data.message : ('**Error:** ' + (errorMsg || 'Please try again.'));
+          await replaceLoadingMessage(loadingMessageId, aiMessage);
+          if (ok) {
+            messageHistory.push({ role: 'user', content: userMessage });
+            messageHistory.push({ role: 'assistant', content: data.message });
+            saveHistory();
+            lastFailedUserMessage = null;
+          } else {
+            if (status === 429) lastFailedUserMessage = userMessage;
+            showToast(errorMsg || 'Something went wrong.', 'error', status === 429 ? userMessage : null);
           }
-          return response.json();
-        })
-        .then(data => {
-          let aiMessage = data.message;
-          
-          // Replace loading message with actual AI response
-          replaceLoadingMessage(loadingMessageId, aiMessage);
-          
-          messageHistory.push({ role: "user", content: userMessage });
-          messageHistory.push({ role: "assistant", content: aiMessage });
-          
-          // Analytics tracking can be added here if needed
-          
-          // Enable syntax highlighting
-          if (typeof Prism !== 'undefined') {
-            Prism.highlightAll();
-          }
-          
-          sendButton.disabled = false;
-          sendButton.style.opacity = 1;
+          setSendLoading(false);
+          updateCharCounter();
           scrollToBottom();
         })
         .catch(error => {
-          console.error('An error occurred:', error.message);
-          replaceLoadingMessage(loadingMessageId, "Sorry, having trouble connecting to the APIs. Please try again.");
-          
-          sendButton.disabled = false;
-          sendButton.style.opacity = 1;
+          if (error.name === 'AbortError') {
+            replaceLoadingMessage(loadingMessageId, '*Generation stopped.*');
+          } else {
+            console.error('An error occurred:', error);
+            replaceLoadingMessage(loadingMessageId, 'Sorry, having trouble connecting. Please check your connection and try again.');
+            showToast('Connection error. Please try again.', 'error');
+          }
+          setSendLoading(false);
+          updateCharCounter();
           scrollToBottom();
         });
+    }
+
+    function stopRequest() {
+      if (currentAbortController) currentAbortController.abort();
+    }
+
+    function sendMessageHandler() {
+      const placeholderEl = getPlaceholder();
+      if (placeholderEl) placeholderEl.style.display = 'none';
+
+      const userMessage = userInput.value.trim();
+      if (!userMessage) return;
+      if (userMessage.length > MAX_CHARS) {
+        showToast('Message is too long. Max ' + MAX_CHARS + ' characters.', 'error');
+        return;
+      }
+
+      addUserMessage(userMessage);
+      const loadingMessageId = addLoadingMessage();
+      userInput.value = '';
+      updateCharCounter();
+      setSendLoading(true);
+      doFetch(userMessage, loadingMessageId);
     }
 
     function addUserMessage(message) {
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message user-message';
-      messageDiv.textContent = message;
+      messageDiv.innerHTML = `
+        <div class="user-message-inner">
+          <span class="user-message-text">${escapeHtml(message)}</span>
+          <span class="user-message-actions">
+            <button type="button" class="copy-btn message-delete" onclick="copyUserMessage(this)" title="Copy">📋</button>
+            <button type="button" class="message-delete" onclick="deleteMessage(this)" title="Delete">🗑️</button>
+          </span>
+        </div>
+      `;
       chatBox.appendChild(messageDiv);
       scrollToBottom();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     function addLoadingMessage() {
@@ -635,173 +907,321 @@
       const messageDiv = document.createElement('div');
       messageDiv.id = messageId;
       messageDiv.className = 'message ai-message loading-yet';
+      messageDiv.innerHTML = '<span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>';
       chatBox.appendChild(messageDiv);
       scrollToBottom();
       return messageId;
     }
 
-    async function replaceLoadingMessage(messageId, content) {
-      const loadingElement = document.getElementById(messageId);
-      if (loadingElement) {
-        loadingElement.classList.remove('loading-yet');
-        
-        // Create AI message structure with copy button
-        const aiMessageContent = document.createElement('div');
-        aiMessageContent.className = 'ai-message-content';
-        
-        // Add AI label, timestamp, and copy button header
-        const header = document.createElement('div');
-        header.className = 'ai-message-header';
-        const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        header.innerHTML = `
-          <span class="ai-label">AI Assistant • ${timestamp}</span>
-          <button class="copy-btn" onclick="copyMessage(this)">📋 Copy</button>
-        `;
-        
-        // Add message content with markdown rendering
-        const contentDiv = document.createElement('div');
-        
-        // Load marked.js if not already loaded and render markdown
-        await loadMarked();
-        contentDiv.innerHTML = marked.parse(content);
-        
-        aiMessageContent.appendChild(header);
-        aiMessageContent.appendChild(contentDiv);
-        loadingElement.appendChild(aiMessageContent);
-        
-        scrollToBottom();
+    function deleteMessage(button) {
+      const msgEl = button.closest('.message');
+      if (!msgEl) return;
+      const messages = Array.from(chatBox.querySelectorAll('.message'));
+      const idx = messages.indexOf(msgEl);
+      if (idx < 0) return;
+      const isUser = msgEl.classList.contains('user-message');
+      let otherEl = null;
+      if (isUser && messages[idx + 1] && messages[idx + 1].classList.contains('ai-message')) {
+        otherEl = messages[idx + 1];
+      } else if (!isUser && messages[idx - 1] && messages[idx - 1].classList.contains('user-message')) {
+        otherEl = messages[idx - 1];
       }
+      const pairIndex = isUser ? Math.floor(idx / 2) : Math.floor((idx - 1) / 2);
+      messageHistory.splice(pairIndex * 2, 2);
+      msgEl.remove();
+      if (otherEl) otherEl.remove();
+      saveHistory();
+      if (messageHistory.length === 0) renderPlaceholder();
+      updateScrollToBottomVisibility();
+    }
+
+    async function replaceLoadingMessage(messageId, content, showRegenerate = true) {
+      const loadingElement = document.getElementById(messageId);
+      if (!loadingElement) return;
+      loadingElement.classList.remove('loading-yet');
+
+      const aiMessageContent = document.createElement('div');
+      aiMessageContent.className = 'ai-message-content';
+      const header = document.createElement('div');
+      header.className = 'ai-message-header';
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const copyBtn = '<button class="copy-btn" type="button" onclick="copyMessage(this)">📋 Copy</button>';
+      const regenBtn = showRegenerate ? '<button class="regenerate-btn" type="button" onclick="regenerateResponse(this)">🔄 Regenerate</button>' : '';
+      const delBtn = '<button type="button" class="message-delete" onclick="deleteMessage(this)" title="Delete">🗑️</button>';
+      header.innerHTML = `
+        <span class="ai-label">AI Assistant • ${timestamp}</span>
+        <span>${regenBtn} ${copyBtn} ${delBtn}</span>
+      `;
+      const contentDiv = document.createElement('div');
+      await loadMarked();
+      contentDiv.innerHTML = marked.parse(content);
+      aiMessageContent.appendChild(header);
+      aiMessageContent.appendChild(contentDiv);
+      loadingElement.appendChild(aiMessageContent);
+
+      if (typeof Prism !== 'undefined') {
+        contentDiv.querySelectorAll('pre code').forEach(el => Prism.highlightElement(el));
+      }
+      scrollToBottom();
+    }
+
+    function regenerateResponse(button) {
+      const aiMsgEl = button.closest('.ai-message');
+      if (!aiMsgEl) return;
+      const messages = Array.from(chatBox.querySelectorAll('.message'));
+      const idx = messages.indexOf(aiMsgEl);
+      if (idx < 1) return;
+      const userMsgEl = messages[idx - 1];
+      const textEl = userMsgEl.querySelector('.user-message-text');
+      const userContent = (textEl ? textEl.textContent : userMsgEl.textContent).trim();
+      const pairIndex = Math.floor((idx - 1) / 2);
+      messageHistory.splice(pairIndex * 2, 2);
+      userMsgEl.remove();
+      aiMsgEl.remove();
+      if (messageHistory.length === 0) renderPlaceholder();
+      addUserMessage(userContent);
+      const loadingMessageId = addLoadingMessage();
+      setSendLoading(true);
+      doFetch(userContent, loadingMessageId);
     }
 
     function copyMessage(button) {
       const messageContent = button.closest('.ai-message').querySelector('.ai-message-content > div:last-child');
-      const textToCopy = messageContent.textContent || messageContent.innerText;
-      
-      navigator.clipboard.writeText(textToCopy).then(() => {
+      const textToCopy = messageContent ? (messageContent.textContent || messageContent.innerText) : '';
+      copyToClipboard(textToCopy, button, '📋 Copy');
+    }
+
+    function copyUserMessage(button) {
+      const wrap = button.closest('.user-message');
+      const textEl = wrap ? wrap.querySelector('.user-message-text') : null;
+      const textToCopy = textEl ? textEl.textContent : '';
+      copyToClipboard(textToCopy, button, '📋');
+    }
+
+    function copyToClipboard(text, button, resetLabel) {
+      navigator.clipboard.writeText(text).then(() => {
         showToast('Message copied to clipboard!');
-        button.textContent = '✅ Copied';
+        button.textContent = '✅';
         button.style.background = 'var(--success-color)';
-        
-        setTimeout(() => {
-          button.textContent = '📋 Copy';
-          button.style.background = '';
-        }, 2000);
-      }).catch(err => {
-        console.error('Failed to copy: ', err);
-        showToast('Failed to copy message');
-      });
+        setTimeout(() => { button.textContent = resetLabel; button.style.background = ''; }, 2000);
+      }).catch(() => showToast('Failed to copy message', 'error'));
     }
 
-    function showToast(message) {
+    function showToast(message, type = 'success', retryUserMessage = null) {
       const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = message;
+      toast.className = 'toast toast-' + type + (retryUserMessage ? ' toast-with-action' : '');
+      toast.setAttribute('role', 'status');
+      toast.appendChild(document.createTextNode(message));
+      if (retryUserMessage) {
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'toast-retry';
+        retryBtn.textContent = 'Retry';
+        retryBtn.addEventListener('click', () => {
+          toast.remove();
+          if (lastFailedUserMessage) {
+            addUserMessage(lastFailedUserMessage);
+            const loadingMessageId = addLoadingMessage();
+            setSendLoading(true);
+            doFetch(lastFailedUserMessage, loadingMessageId);
+          }
+        });
+        toast.appendChild(retryBtn);
+      }
       document.body.appendChild(toast);
-      
-      setTimeout(() => {
-        toast.remove();
-      }, 3000);
+      setTimeout(() => toast.remove(), retryUserMessage ? 8000 : 3000);
     }
 
-    function exportChat() {
+    function downloadExport(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportChat(format) {
       if (messageHistory.length === 0) {
-        showToast('No messages to export');
+        showToast('No messages to export', 'error');
         return;
       }
-
+      const dateStr = new Date().toISOString().split('T')[0];
       const exportData = {
         timestamp: new Date().toISOString(),
         messages: messageHistory,
         totalMessages: messageHistory.length
       };
-
-      // Create downloadable files
       const jsonData = JSON.stringify(exportData, null, 2);
-      const textData = messageHistory.map(msg => 
-        `${msg.role === 'user' ? 'You' : 'AI'}: ${msg.content}`
-      ).join('\n\n');
+      const textData = messageHistory.map(m => (m.role === 'user' ? 'You' : 'AI') + ': ' + m.content).join('\n\n');
+      const mdData = messageHistory.map(m => (m.role === 'user' ? '**You:**' : '**AI:**') + '\n\n' + m.content).join('\n\n---\n\n');
 
-      // Download JSON
-      const jsonBlob = new Blob([jsonData], { type: 'application/json' });
-      const jsonUrl = URL.createObjectURL(jsonBlob);
-      const jsonLink = document.createElement('a');
-      jsonLink.href = jsonUrl;
-      jsonLink.download = `quickgpt-chat-${new Date().toISOString().split('T')[0]}.json`;
-      jsonLink.click();
-
-      // Download TXT
-      const txtBlob = new Blob([textData], { type: 'text/plain' });
-      const txtUrl = URL.createObjectURL(txtBlob);
-      const txtLink = document.createElement('a');
-      txtLink.href = txtUrl;
-      txtLink.download = `quickgpt-chat-${new Date().toISOString().split('T')[0]}.txt`;
-      txtLink.click();
-
-      // Clean up
-      URL.revokeObjectURL(jsonUrl);
-      URL.revokeObjectURL(txtUrl);
-      
-      showToast('Chat exported successfully!');
+      if (format === 'json' || format === 'all') downloadExport(new Blob([jsonData], { type: 'application/json' }), 'quickgpt-chat-' + dateStr + '.json');
+      if (format === 'txt' || format === 'all') downloadExport(new Blob([textData], { type: 'text/plain' }), 'quickgpt-chat-' + dateStr + '.txt');
+      if (format === 'md' || format === 'all') downloadExport(new Blob([mdData], { type: 'text/markdown' }), 'quickgpt-chat-' + dateStr + '.md');
+      showToast(format === 'all' ? 'Chat exported (JSON, TXT, Markdown)!' : 'Exported as ' + format.toUpperCase() + '!');
     }
 
     function updateCharCounter() {
       const length = userInput.value.length;
-      const maxLength = 2000;
-      charCounter.textContent = `${length} / ${maxLength}`;
-      
-      // Update styling based on length
-      charCounter.classList.remove('warning', 'danger');
-      if (length > maxLength * 0.8) {
-        charCounter.classList.add('warning');
-      }
-      if (length > maxLength * 0.95) {
-        charCounter.classList.add('danger');
-      }
+      charCounter.textContent = length + ' / ' + MAX_CHARS;
+      charCounter.classList.toggle('warning', length > MAX_CHARS * 0.8);
+      charCounter.classList.toggle('danger', length > MAX_CHARS * 0.95);
+      sendButton.disabled = sendButton.getAttribute('aria-busy') === 'true' || length > MAX_CHARS;
+    }
+
+    function renderPlaceholder() {
+      const wrap = document.createElement('div');
+      wrap.className = 'placeholder-message';
+      wrap.id = 'placeholder-wrap';
+      wrap.innerHTML = '<span>Start a conversation by typing a message...</span>' +
+        '<div class="suggested-prompts" id="suggested-prompts">' +
+        '<button type="button" class="suggested-prompt" data-prompt="Explain quantum computing in simple terms">Explain quantum computing</button>' +
+        '<button type="button" class="suggested-prompt" data-prompt="Write a short haiku about coding">Write a haiku</button>' +
+        '<button type="button" class="suggested-prompt" data-prompt="Help me debug: my function returns undefined">Debug this code</button>' +
+        '<button type="button" class="suggested-prompt" data-prompt="Summarize the key points of a long article">Summarize an article</button>' +
+        '</div>';
+      chatBox.appendChild(wrap);
+      wrap.querySelectorAll('.suggested-prompt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          userInput.value = btn.dataset.prompt || '';
+          userInput.focus();
+          updateCharCounter();
+          sendMessageHandler();
+        });
+      });
     }
 
     function clearChat() {
-      // Clear message history
       messageHistory.length = 0;
-      
-      // Clear chat display
-      chatBox.innerHTML = '<div class="placeholder-message">Start a conversation by typing a message...</div>';
-      
-      // Show placeholder message
-      placeholderMessage.style.display = 'block';
-      
-      // Clear input
+      saveHistory();
+      chatBox.innerHTML = '';
+      renderPlaceholder();
       userInput.value = '';
       userInput.focus();
-      
-      // Reset character counter
       updateCharCounter();
-      
-      // Scroll to top
       chatBox.scrollTop = 0;
     }
 
     function scrollToBottom() {
-      chatBox.scrollTop = chatBox.scrollHeight;
+      const wrapper = document.getElementById('chat-wrapper');
+      if (wrapper) wrapper.scrollTo({ top: wrapper.scrollHeight, behavior: 'smooth' });
+      updateScrollToBottomVisibility();
     }
 
-    // Event listeners
+    function updateScrollToBottomVisibility() {
+      const wrapper = document.getElementById('chat-wrapper');
+      if (!wrapper || !scrollToBottomBtn) return;
+      const threshold = 100;
+      const nearBottom = wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight < threshold;
+      scrollToBottomBtn.classList.toggle('visible', !nearBottom && messageHistory.length > 0);
+    }
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messageHistory));
+      } catch (e) { /* ignore */ }
+    }
+
+    async function loadHistory() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const arr = JSON.parse(raw);
+        if (!Array.isArray(arr) || arr.length === 0) return;
+        messageHistory.length = 0;
+        messageHistory.push(...arr);
+        const ph = getPlaceholder();
+        if (ph) ph.remove();
+        for (const m of messageHistory) {
+          if (m.role === 'user') addUserMessage(m.content);
+          else {
+            const id = addLoadingMessage();
+            await replaceLoadingMessage(id, m.content);
+          }
+        }
+        scrollToBottom();
+      } catch (e) { /* ignore */ }
+    }
+
+    function applyTheme(theme) {
+      const t = theme || 'dark';
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+      else document.documentElement.removeAttribute('data-theme');
+      try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+      themeToggle.textContent = (t === 'light') ? '☀️' : '🌙';
+      themeToggle.setAttribute('aria-label', (t === 'light') ? 'Switch to dark mode' : 'Switch to light mode');
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      applyTheme(current === 'light' ? 'dark' : 'light');
+    }
+
     sendButton.addEventListener('click', sendMessageHandler);
+    stopButton.addEventListener('click', stopRequest);
     clearChatBtn.addEventListener('click', clearChat);
-    exportChatBtn.addEventListener('click', exportChat);
-    
-    userInput.addEventListener('keyup', function(event) {
-      if (event.key === 'Enter' && !sendButton.disabled) {
-        sendMessageHandler();
+    themeToggle.addEventListener('click', toggleTheme);
+
+    exportChatBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('visible');
+      exportChatBtn.setAttribute('aria-expanded', exportMenu.classList.contains('visible'));
+    });
+    exportMenu.addEventListener('click', (e) => e.stopPropagation());
+    exportMenu.querySelectorAll('[data-format]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        exportChat(btn.dataset.format);
+        exportMenu.classList.remove('visible');
+        exportChatBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+    document.addEventListener('click', () => {
+      exportMenu.classList.remove('visible');
+      exportChatBtn.setAttribute('aria-expanded', 'false');
+    });
+
+    chatWrapper.addEventListener('scroll', updateScrollToBottomVisibility);
+    scrollToBottomBtn.addEventListener('click', () => { scrollToBottom(); scrollToBottomBtn.classList.remove('visible'); });
+
+    userInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (sendButton.getAttribute('aria-busy') !== 'true' && userInput.value.length <= MAX_CHARS) sendMessageHandler();
+      }
+      if (e.key === 'Escape') {
+        userInput.value = '';
+        updateCharCounter();
+        userInput.blur();
+      }
+    });
+    userInput.addEventListener('input', function () {
+      updateCharCounter();
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        clearChat();
       }
     });
 
-    userInput.addEventListener('input', updateCharCounter);
+    document.getElementById('suggested-prompts').addEventListener('click', function (e) {
+      const btn = e.target.closest('.suggested-prompt');
+      if (!btn) return;
+      userInput.value = btn.dataset.prompt || '';
+      userInput.focus();
+      updateCharCounter();
+      sendMessageHandler();
+    });
 
-    // Auto-focus input on page load
     userInput.focus();
-    
-    // Initialize character counter
     updateCharCounter();
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+    loadHistory();
+    updateScrollToBottomVisibility();
   </script>
   <script src="prism.js"></script>
 </body>

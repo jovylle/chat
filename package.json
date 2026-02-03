@@ -1,21 +1,21 @@
 {
-  "name": "serverless-function1",
+  "name": "quick-chatgpt",
   "version": "1.0.0",
-  "description": "Learn how to use serverless functions in less than 30 minutes!",
+  "description": "QuickGPT - Fast AI chat interface with markdown, export, and dark theme (Netlify + OpenAI)",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jovyllebermudez/serverless-function1.git"
+    "url": "git+https://github.com/jovyllebermudez/quick-chatgpt.git"
   },
   "author": "jovyllebermudez",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jovyllebermudez/serverless-function1/issues"
+    "url": "https://github.com/jovyllebermudez/quick-chatgpt/issues"
   },
-  "homepage": "https://github.com/jovyllebermudez/serverless-function1#readme",
+  "homepage": "https://github.com/jovyllebermudez/quick-chatgpt#readme",
   "dependencies": {
     "express": "^4.18.2",
     "openai": "^4.10.0",
