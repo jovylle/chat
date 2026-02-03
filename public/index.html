@@ -1668,7 +1668,9 @@
       <div class="settings-section">
         <h3>ℹ️ About</h3>
         <p>QuickGPT v2.0 - Fast, modern AI chat interface</p>
-        <p style="font-size: var(--font-xs);">Built with ❤️ by <a href="https://github.com/jovylle" style="color: var(--accent-color);">jovylle</a></p>
+        <p style="font-size: var(--font-xs);">
+          Learn more or contribute on <a href="https://github.com/jovylle/chat" style="color: var(--accent-color);" target="_blank" rel="noopener noreferrer">github.com/jovylle/chat</a>
+        </p>
       </div>
     </div>
   </div>
@@ -2315,11 +2317,11 @@
     // Make deleteMessage globally accessible
     window.deleteMessage = deleteMessage;
 
-    const ICON_TEMPLATES = {
-      clock: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 100 16 8 8 0 000-16zm.5 4.5v4l3 1.5-.75 1.3L9.5 10V6.5h1z"></path></svg>',
-      regenerate: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2a8 8 0 017.95 7H16a6 6 0 10-1.26 3.55l1.42 1.42A8 8 0 0010 2zm-3 4v2H4l4 4 4-4H9V6H7z"></path></svg>',
-      copy: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M6 3h8a2 2 0 012 2v2h-2V5H6v10h6v2H6a2 2 0 01-2-2V5a2 2 0 012-2zm3 4h6v10H9z"></path></svg>'
-    };
+     const ICON_TEMPLATES = {
+       clock: '<i class="fa-regular fa-clock" aria-hidden="true"></i>',
+       regenerate: '<i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i>',
+       copy: '<i class="fa-solid fa-clone" aria-hidden="true"></i>'
+     };
 
     function createAiMessageFooter(timestamp, showRegenerate = true) {
       const footer = document.createElement('div');
@@ -2356,6 +2358,27 @@
       return footer;
     }
 
+    function installCodeCopyButtons(container = document) {
+      container.querySelectorAll('pre').forEach(pre => {
+        if (pre.dataset.hasCopyBtn) return;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'code-copy-btn';
+        btn.setAttribute('aria-label', 'Copy code block');
+        btn.innerHTML = '<i class="fa-solid fa-copy"></i>';
+        btn.addEventListener('click', () => {
+          const text = pre.innerText || pre.textContent;
+          navigator.clipboard.writeText(text).then(() => {
+            showToast('Code copied to clipboard!');
+          }).catch(() => {
+            showToast('Unable to copy code', 'error');
+          });
+        });
+        pre.appendChild(btn);
+        pre.dataset.hasCopyBtn = 'true';
+      });
+    }
+
     async function addAIMessage(content, save = true) {
       const messageDiv = document.createElement('div');
       messageDiv.className = 'message ai-message';
@@ -2372,6 +2395,7 @@
       chatBox.appendChild(messageDiv);
 
       if (typeof Prism !== 'undefined') {
+        installCodeCopyButtons(contentDiv);
         contentDiv.querySelectorAll('pre code').forEach(el => Prism.highlightElement(el));
       }
       scrollToBottom();
@@ -2449,9 +2473,9 @@
     function copyToClipboard(text, button, resetLabel) {
       navigator.clipboard.writeText(text).then(() => {
         showToast('Message copied to clipboard!');
-        button.textContent = '✅';
-        button.style.background = 'var(--success-color)';
-        setTimeout(() => { button.textContent = resetLabel; button.style.background = ''; }, 2000);
+      button.innerHTML = '<i class="fa-solid fa-check"></i>';
+      button.style.background = 'var(--success-color)';
+      setTimeout(() => { button.innerHTML = resetLabel; button.style.background = ''; }, 2000);
       }).catch(() => showToast('Failed to copy message', 'error'));
     }
 
