@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const Anthropic = require('@anthropic-ai/sdk');
 
 // Initialize OpenAI with error handling
 let openai;
@@ -8,6 +9,16 @@ try {
   });
 } catch (error) {
   console.error('OpenAI initialization error:', error);
+}
+
+// Initialize Anthropic (Claude)
+let anthropic;
+try {
+  anthropic = new Anthropic({
+    apiKey: process.env.MY_CLAUDE_API,
+  });
+} catch (error) {
+  console.error('Anthropic initialization error:', error);
 }
 
 // CORS headers for better compatibility
@@ -39,19 +50,21 @@ exports.handler = async function (event, context) {
     };
   }
 
-  // Check if OpenAI is properly initialized
-  if (!openai) {
+  // Check if at least one AI service is initialized
+  if (!openai && !anthropic) {
     return {
       statusCode: 500,
       headers: corsHeaders,
-      body: JSON.stringify({ error: "OpenAI API not configured" })
+      body: JSON.stringify({ error: "AI services not configured" })
     };
   }
 
   try {
     // Parse and validate request body
     const body = JSON.parse(event.body);
-    const { message, history = [] } = body;
+    const { message, history = [], customApiKey, provider = 'openai', model, systemPrompt } = body;
+    
+    console.log('Request received:', { model, provider, hasCustomKey: !!customApiKey });
 
     // Validate required fields
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
@@ -71,39 +84,115 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // Create messages array with system prompt
-    const messages = [
-      {
-        role: 'system',
-        content: 'You are a helpful assistant. Provide clear, concise, and accurate responses.'
-      },
-      ...history,
-      {
+    // Determine model and provider
+    let selectedModel = model || 'gpt-3.5-turbo-16k';
+    const isClaudeModel = selectedModel.includes('claude');
+    
+    console.log('Processing:', { selectedModel, isClaudeModel, hasAnthropic: !!anthropic, hasOpenAI: !!openai });
+    
+    // Use custom API key if provided
+    let apiClient = isClaudeModel ? anthropic : openai;
+    let actualProvider = isClaudeModel ? 'anthropic' : 'openai';
+    
+    console.log('Using provider:', actualProvider);
+    
+    if (customApiKey) {
+      if (provider === 'openai') {
+        apiClient = new OpenAI({ apiKey: customApiKey });
+        actualProvider = 'openai';
+      } else if (provider === 'anthropic') {
+        apiClient = new Anthropic({ apiKey: customApiKey });
+        actualProvider = 'anthropic';
+      } else {
+        return {
+          statusCode: 400,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: `Provider "${provider}" not supported.` })
+        };
+      }
+    }
+
+    let aiMessage;
+
+    // Route to appropriate AI service
+    if (actualProvider === 'anthropic' || isClaudeModel) {
+      // Check if Anthropic is initialized
+      if (!apiClient) {
+        return {
+          statusCode: 500,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: "Claude API not configured" })
+        };
+      }
+
+      // Convert message history to Claude format
+      const claudeMessages = history.map(msg => ({
+        role: msg.role === 'assistant' ? 'assistant' : 'user',
+        content: msg.content
+      }));
+
+      // Add current message
+      claudeMessages.push({
         role: 'user',
         content: message.trim()
+      });
+
+      // Call Claude API
+      const claudeResponse = await apiClient.messages.create({
+        model: selectedModel,
+        max_tokens: 1024,
+        temperature: 0.7,
+        system: systemPrompt || 'You are a helpful chat assistant.',
+        messages: claudeMessages
+      });
+
+      aiMessage = claudeResponse.content[0]?.text;
+
+      if (!aiMessage) {
+        throw new Error('No response from Claude');
       }
-    ];
 
-    // Call OpenAI API with increased token limit for more complete responses
-    const gptResponse = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo-16k',
-      max_tokens: 1024, // Increased from 256 for more complete responses
-      temperature: 0.7,
-      messages: messages
-    });
+    } else {
+      // OpenAI API
+      if (!apiClient) {
+        return {
+          statusCode: 500,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: "OpenAI API not configured" })
+        };
+      }
 
-    const aiMessage = gptResponse.choices[0]?.message?.content;
+      const messages = [
+        {
+          role: 'system',
+          content: systemPrompt || 'You are a helpful chat assistant.'
+        },
+        ...history,
+        {
+          role: 'user',
+          content: message.trim()
+        }
+      ];
 
-    if (!aiMessage) {
-      throw new Error('No response from OpenAI');
+      const gptResponse = await apiClient.chat.completions.create({
+        model: selectedModel,
+        max_tokens: 1024,
+        temperature: 0.7,
+        messages: messages
+      });
+
+      aiMessage = gptResponse.choices[0]?.message?.content;
+
+      if (!aiMessage) {
+        throw new Error('No response from OpenAI');
+      }
     }
 
     return {
       statusCode: 200,
       headers: corsHeaders,
       body: JSON.stringify({ 
-        message: aiMessage,
-        usage: gptResponse.usage // Include usage stats for monitoring
+        message: aiMessage
       })
     };
 

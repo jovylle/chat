@@ -45,9 +45,3 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
     Pragma = "no-cache"
     Expires = "0"
-
-# Development settings
-[dev]
-  command = "echo 'No dev server needed'"
-  port = 8888
-  publish = "public"
