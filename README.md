@@ -2,7 +2,7 @@
 
 A fast, modern AI chat interface with markdown support, dark/light theme, and Netlify serverless backend (OpenAI GPT-3.5).
 
-![QuickGPT](https://github.com/jovyllebermudez/quick-chatgpt/assets/73716444/6195e805-d8a3-4614-b4a8-a8a32165f624)
+![QuickGPT](https://github.com/jovylle/quick-chatgpt/assets/73716444/6195e805-d8a3-4614-b4a8-a8a32165f624)
 
 ## Features
 
@@ -27,7 +27,7 @@ A fast, modern AI chat interface with markdown support, dark/light theme, and Ne
 1. **Clone and install**
 
    ```bash
-   git clone https://github.com/jovyllebermudez/quick-chatgpt.git
+   git clone https://github.com/jovylle/quick-chatgpt.git
    cd quick-chatgpt
    npm install
    ```
@@ -58,4 +58,4 @@ A fast, modern AI chat interface with markdown support, dark/light theme, and Ne
 
 ## License
 
-MIT · [jovyllebermudez](https://github.com/jovyllebermudez)
+MIT · [jovylle](https://github.com/jovylle)

@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jovyllebermudez/quick-chatgpt.git"
+    "url": "git+https://github.com/jovylle/quick-chatgpt.git"
   },
-  "author": "jovyllebermudez",
+  "author": "jovylle",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jovyllebermudez/quick-chatgpt/issues"
+    "url": "https://github.com/jovylle/quick-chatgpt/issues"
   },
-  "homepage": "https://github.com/jovyllebermudez/quick-chatgpt#readme",
+  "homepage": "https://github.com/jovylle/quick-chatgpt#readme",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "express": "^4.22.1",
