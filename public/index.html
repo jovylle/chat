@@ -8,6 +8,11 @@
   <meta name="keywords" content="AI, ChatGPT, chat, assistant, GPT-3.5, markdown">
   <meta name="author" content="jovylle">
   <meta name="theme-color" content="#0f0f0f" id="meta-theme-color">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="quickgpt-icon.png" sizes="512x512" type="image/png">
+  <link rel="apple-touch-icon" href="quickgpt-icon.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   
   <!-- Performance optimizations -->
@@ -70,6 +75,8 @@
       --icon-sm: 18px;
       --icon-base: 20px;
       --icon-lg: 24px;
+      --keyboard-offset: 0px;
+      --input-offset: 96px;
     }
 
     html[data-theme="light"] {
@@ -453,6 +460,7 @@
       display: flex;
       flex: 1;
       padding: 20px;
+      padding-bottom: calc(var(--input-offset, 96px) + 20px);
       overflow-y: auto;
       overflow-x: hidden;
       background: var(--bg-secondary);
@@ -556,7 +564,7 @@
 
     .scroll-to-bottom-btn {
       position: fixed;
-      bottom: 110px; /* Above fixed input area */
+      bottom: calc(110px + env(safe-area-inset-bottom, 0)); /* Above fixed input area */
       left: 50%;
       transform: translateX(-50%);
       margin: 0;
@@ -613,8 +621,20 @@
     .export-menu button:hover { background: var(--accent-color); color: white; }
 
     .toast-with-action { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .toast-with-action .toast-retry { background: rgba(255,255,255,0.3); border: none; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-    .toast-with-action .toast-retry:hover { background: rgba(255,255,255,0.5); }
+    .toast-with-action .toast-retry,
+    .toast-with-action .toast-action {
+      background: rgba(255,255,255,0.3);
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .toast-with-action .toast-retry:hover,
+    .toast-with-action .toast-action:hover {
+      background: rgba(255,255,255,0.5);
+    }
 
     .ai-message {
       background: none;
@@ -754,14 +774,15 @@
 
     .input-container {
       display: flex;
-      align-items: start;
-      padding: 20px;
+      align-items: flex-start;
+      padding: 16px 20px;
+      padding-bottom: calc(16px + var(--keyboard-offset, 0px));
       background: var(--bg-primary);
       border-top: 1px var(--border-style) var(--border-color);
       justify-content: center;
       gap: 12px;
       position: sticky;
-      bottom: 0;
+      bottom: var(--keyboard-offset, 0px);
       z-index: 50;
     }
     
@@ -903,7 +924,7 @@
     .suggested-prompt {
       background: var(--bg-tertiary);
       color: var(--text-secondary);
-      border: 1px solid var(--border-color);
+      border: 1px var(--border-style) var(--border-color);
       border-radius: 20px;
       padding: 10px 18px;
       font-size: var(--font-sm);
@@ -1115,8 +1136,9 @@
     /* Toast notification */
     .toast {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      left: 50%;
+      transform: translateX(-50%);
       color: white;
       padding: 12px 20px;
       border-radius: 8px;
@@ -1128,6 +1150,7 @@
     .toast.toast-success,
     .toast { background: var(--success-color); }
     .toast.toast-error { background: var(--error-color); }
+    .toast.toast-info { background: var(--accent-color); }
 
     @keyframes toastSlideIn {
       from {
@@ -1374,6 +1397,7 @@
       
       .chat-wrapper {
         padding: 12px;
+        padding-bottom: calc(var(--input-offset, 96px) + 12px);
       }
       
       .chat-messages {
@@ -1394,6 +1418,17 @@
       .input-container {
         padding: 12px;
         gap: 8px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        /* bottom: env(safe-area-inset-bottom, 0px); */
+        width: 100%;
+        border-radius: 0;
+        border-top: 1px var(--border-style) var(--border-color);
+        box-shadow: 0 -14px 30px rgba(0, 0, 0, 0.35);
+        background: var(--bg-primary);
+        backdrop-filter: blur(18px);
+        /* padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); */
       }
       
       #user-input {
@@ -1427,7 +1462,7 @@
       }
       
       .scroll-to-bottom-btn {
-        bottom: 90px; /* Adjust for smaller mobile input */
+        bottom: calc(170px + env(safe-area-inset-bottom, 0)); /* Stay above fixed input */
       }
     }
 
@@ -1682,6 +1717,9 @@
     const API_CONFIG_KEY = 'quickgpt_api_config';
     const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
     const MAX_CHARS = 2000;
+    const APP_VERSION = '1.0.0-dev';
+    const APP_PATCH = 'patch-2';
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
     
     // Conversation management
     let conversations = {};
@@ -1722,6 +1760,53 @@
     const clearAllDataBtn = document.getElementById('clear-all-data-btn');
     const importConversationsBtn = document.getElementById('import-conversations-btn');
 
+    let versionToastShown = false;
+    let deferredPrompt = null;
+    let keyboardOffsetTimer = null;
+    let inputOffsetTimer = null;
+
+    function updateKeyboardOffset() {
+      if (!window.visualViewport) return;
+      const viewport = window.visualViewport;
+      const keyboardHeight = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop
+      );
+      document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
+      console.log(`[Keyboard] offset=${Math.round(keyboardHeight)}px`);
+    }
+
+    function scheduleKeyboardOffsetUpdate() {
+      if (keyboardOffsetTimer) return;
+      keyboardOffsetTimer = setTimeout(() => {
+        keyboardOffsetTimer = null;
+        updateKeyboardOffset();
+      }, 100);
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', scheduleKeyboardOffsetUpdate);
+      window.visualViewport.addEventListener('scroll', scheduleKeyboardOffsetUpdate);
+      scheduleKeyboardOffsetUpdate();
+    }
+
+    function updateInputOffset() {
+      if (!inputContainer) return;
+      const height = inputContainer.offsetHeight || 0;
+      document.documentElement.style.setProperty('--input-offset', `${height}px`);
+    }
+
+    function scheduleInputOffsetUpdate() {
+      if (inputOffsetTimer) return;
+      inputOffsetTimer = setTimeout(() => {
+        inputOffsetTimer = null;
+        updateInputOffset();
+      }, 60);
+    }
+
+    window.addEventListener('resize', scheduleInputOffsetUpdate);
+    userInput.addEventListener('input', scheduleInputOffsetUpdate);
+    scheduleInputOffsetUpdate();
     // API Configuration
     let apiConfig = {
       useCustomKey: false,
@@ -2479,12 +2564,18 @@
       }).catch(() => showToast('Failed to copy message', 'error'));
     }
 
-    function showToast(message, type = 'success', retryUserMessage = null) {
+    function showToast(message, type = 'success', opts = {}) {
+      const options = (typeof opts === 'string' || opts === null)
+        ? { retryMessage: opts }
+        : (opts || {});
+      const { retryMessage = null, actionLabel, actionHandler, duration } = options;
+      const hasActions = Boolean(retryMessage || (actionLabel && actionHandler));
       const toast = document.createElement('div');
-      toast.className = 'toast toast-' + type + (retryUserMessage ? ' toast-with-action' : '');
+      toast.className = 'toast toast-' + type + (hasActions ? ' toast-with-action' : '');
       toast.setAttribute('role', 'status');
       toast.appendChild(document.createTextNode(message));
-      if (retryUserMessage) {
+
+      if (retryMessage) {
         const retryBtn = document.createElement('button');
         retryBtn.type = 'button';
         retryBtn.className = 'toast-retry';
@@ -2500,8 +2591,75 @@
         });
         toast.appendChild(retryBtn);
       }
+
+      if (actionLabel && typeof actionHandler === 'function') {
+        const actionBtn = document.createElement('button');
+        actionBtn.type = 'button';
+        actionBtn.className = 'toast-action';
+        actionBtn.textContent = actionLabel;
+        actionBtn.addEventListener('click', () => {
+          toast.remove();
+          actionHandler();
+        });
+        toast.appendChild(actionBtn);
+      }
+
       document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), retryUserMessage ? 8000 : 3000);
+      const autoRemoveDelay = duration ?? (hasActions ? 8000 : 3000);
+      setTimeout(() => toast.remove(), autoRemoveDelay);
+    }
+
+    function showInstallPromptToast() {
+      if (!deferredPrompt) return;
+      showToast('Install QuickGPT for quick access', 'info', {
+        actionLabel: 'Install',
+        actionHandler: async () => {
+          try {
+            const promptEvent = deferredPrompt;
+            deferredPrompt = null;
+            promptEvent.prompt();
+            const choiceResult = await promptEvent.userChoice;
+            showToast(
+              choiceResult.outcome === 'accepted'
+                ? 'Thanks for installing QuickGPT!'
+                : 'Install dismissed',
+              choiceResult.outcome === 'accepted' ? 'success' : 'error'
+            );
+          } catch (error) {
+            console.error('Install prompt error:', error);
+            showToast('Unable to open install prompt', 'error');
+          }
+        },
+        duration: 5000
+      });
+    }
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      showInstallPromptToast();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      showToast('QuickGPT installed! Launch from your home screen anytime.', 'success');
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => {
+          console.log('Service worker registered.');
+        })
+        .catch((error) => {
+          console.warn('Service worker registration failed:', error);
+        });
+    }
+
+    function showVersionToast() {
+      if (versionToastShown) return;
+      versionToastShown = true;
+      showToast(`QuickGPT ${APP_VERSION} (${APP_PATCH})`, 'info', { duration: 4000 });
     }
 
     function downloadExport(blob, filename) {
@@ -2656,9 +2814,12 @@
 
     userInput.addEventListener('keydown', function (e) {
       if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        if (sendButton.getAttribute('aria-busy') !== 'true' && userInput.value.length <= MAX_CHARS) {
-          sendMessageHandler();
+        const sendViaKeyboard = (e.ctrlKey || e.metaKey) || !isMobileDevice;
+        if (sendViaKeyboard) {
+          e.preventDefault();
+          if (sendButton.getAttribute('aria-busy') !== 'true' && userInput.value.length <= MAX_CHARS) {
+            sendMessageHandler();
+          }
         }
       }
       if (e.key === 'Escape') {
@@ -2760,6 +2921,7 @@
     applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
     loadAllConversations();
     updateScrollToBottomVisibility();
+    showVersionToast();
   </script>
   <script src="prism.js"></script>
 </body>
