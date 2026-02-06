@@ -168,6 +168,25 @@
       justify-content: space-between;
     }
 
+    .conversation-search {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .conversation-search input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px var(--border-style) var(--border-color);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: var(--font-sm);
+    }
+
+    .conversation-search input::placeholder {
+      color: var(--text-muted);
+    }
+
     .sidebar-title {
       font-weight: 600;
       font-size: var(--font-sm);
@@ -276,6 +295,32 @@
       gap: 8px;
     }
 
+    .conversation-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .conversation-pin,
+    .conversation-rename,
+    .conversation-delete {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: var(--icon-sm);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .conversation-pin.active {
+      color: var(--accent-color);
+    }
+
     .conversation-item.active .conversation-meta {
       color: rgba(255, 255, 255, 0.8);
     }
@@ -292,18 +337,7 @@
     }
 
     .conversation-delete {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: var(--icon-sm);
-      transition: all 0.2s;
       opacity: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .conversation-item:hover .conversation-delete {
@@ -460,7 +494,7 @@
       display: flex;
       flex: 1;
       padding: 20px;
-      padding-bottom: calc(var(--input-offset, 96px) + 20px);
+      margin-bottom: calc(var(--input-offset, 96px) + 20px);
       overflow-y: auto;
       overflow-x: hidden;
       background: var(--bg-secondary);
@@ -543,6 +577,34 @@
     }
 
     .user-message-text { flex: 1; word-break: break-word; }
+
+    .user-message-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .user-message .icon-btn {
+      background: rgba(255,255,255,0.18);
+      color: white;
+      width: 32px;
+      height: 32px;
+    }
+
+    .edit-message-textarea {
+      width: 100%;
+      min-height: 56px;
+      max-height: 200px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px var(--border-style) rgba(255,255,255,0.6);
+      background: rgba(15, 23, 42, 0.5);
+      color: white;
+      font-family: inherit;
+      font-size: var(--font-base);
+      line-height: 1.4;
+      resize: vertical;
+    }
 
     .message-delete {
       background: rgba(255,255,255,0.2);
@@ -700,6 +762,11 @@
     }
 
     .icon-btn:hover {
+      background: var(--accent-color);
+      color: white;
+    }
+
+    .icon-btn.active {
       background: var(--accent-color);
       color: white;
     }
@@ -940,6 +1007,30 @@
       box-shadow: var(--shadow-light);
     }
 
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .quick-reply {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px var(--border-style) var(--border-color);
+      border-radius: 16px;
+      padding: 6px 12px;
+      font-size: var(--font-xs);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .quick-reply:hover {
+      background: var(--accent-color);
+      color: white;
+      border-color: var(--accent-color);
+    }
+
     .placeholder-message {
       color: var(--text-muted);
       margin: auto;
@@ -1136,7 +1227,7 @@
     /* Toast notification */
     .toast {
       position: fixed;
-      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
       color: white;
@@ -1397,7 +1488,7 @@
       
       .chat-wrapper {
         padding: 12px;
-        padding-bottom: calc(var(--input-offset, 96px) + 12px);
+        margin-bottom: calc(var(--input-offset, 96px) + 12px);
       }
       
       .chat-messages {
@@ -1552,6 +1643,9 @@
       <div class="sidebar-header">
         <span class="sidebar-title">Conversations</span>
         <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+      </div>
+      <div class="conversation-search">
+        <input type="text" id="conversation-search" placeholder="Search chats..." aria-label="Search conversations">
       </div>
       <div class="conversation-list" id="conversation-list">
         <!-- Conversations will be rendered here -->
@@ -1716,6 +1810,7 @@
     const ACTIVE_CONVO_KEY = 'quickgpt_active_conversation';
     const API_CONFIG_KEY = 'quickgpt_api_config';
     const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
+    const DRAFTS_KEY = 'quickgpt_drafts';
     const MAX_CHARS = 2000;
     const APP_VERSION = '1.0.0-dev';
     const APP_PATCH = 'patch-2';
@@ -1726,6 +1821,7 @@
     let activeConversationId = null;
     let currentAbortController = null;
     let lastFailedUserMessage = null;
+    let drafts = {};
 
     const userInput = document.getElementById('user-input');
     const chatBox = document.getElementById('chat-box');
@@ -1743,6 +1839,7 @@
     const sidebarToggleMobile = document.getElementById('sidebar-toggle-mobile');
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
     const conversationList = document.getElementById('conversation-list');
+    const conversationSearch = document.getElementById('conversation-search');
     const newConversationBtn = document.getElementById('new-conversation-btn');
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
@@ -1764,6 +1861,8 @@
     let deferredPrompt = null;
     let keyboardOffsetTimer = null;
     let inputOffsetTimer = null;
+    let activeSpeechUtterance = null;
+    let activeSpeechButton = null;
 
     function updateKeyboardOffset() {
       if (!window.visualViewport) return;
@@ -1773,7 +1872,6 @@
         window.innerHeight - viewport.height - viewport.offsetTop
       );
       document.documentElement.style.setProperty('--keyboard-offset', `${keyboardHeight}px`);
-      console.log(`[Keyboard] offset=${Math.round(keyboardHeight)}px`);
     }
 
     function scheduleKeyboardOffsetUpdate() {
@@ -1807,6 +1905,47 @@
     window.addEventListener('resize', scheduleInputOffsetUpdate);
     userInput.addEventListener('input', scheduleInputOffsetUpdate);
     scheduleInputOffsetUpdate();
+
+    function resizeInput() {
+      if (!userInput) return;
+      userInput.style.height = 'auto';
+      userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
+      scheduleInputOffsetUpdate();
+    }
+
+    function loadDrafts() {
+      try {
+        const stored = localStorage.getItem(DRAFTS_KEY);
+        if (stored) drafts = JSON.parse(stored);
+      } catch (e) {
+        console.error('Failed to load drafts:', e);
+      }
+    }
+
+    function saveDrafts() {
+      try {
+        localStorage.setItem(DRAFTS_KEY, JSON.stringify(drafts));
+      } catch (e) {
+        console.error('Failed to save drafts:', e);
+      }
+    }
+
+    function setDraftForActiveConversation(text) {
+      if (!activeConversationId) return;
+      drafts[activeConversationId] = text;
+      saveDrafts();
+    }
+
+    function getDraftForConversation(conversationId) {
+      return drafts[conversationId] || '';
+    }
+
+    function applyDraftToInput(conversationId) {
+      const draft = getDraftForConversation(conversationId);
+      userInput.value = draft;
+      updateCharCounter();
+      resizeInput();
+    }
     // API Configuration
     let apiConfig = {
       useCustomKey: false,
@@ -2000,6 +2139,10 @@
         exportMenu?.classList.remove('open');
       });
     }
+
+    if (conversationSearch) {
+      conversationSearch.addEventListener('input', renderConversationList);
+    }
     
     if (importFileInput) {
       importFileInput.addEventListener('change', (e) => {
@@ -2072,7 +2215,8 @@
         messages: [],
         created: Date.now(),
         updated: Date.now(),
-        tokenCount: 0
+        tokenCount: 0,
+        pinned: false
       };
       return id;
     }
@@ -2103,6 +2247,8 @@
       if (convo.messages.length === 0) {
         renderPlaceholder();
       }
+
+      applyDraftToInput(conversationId);
       
       // Update UI
       renderConversationList();
@@ -2113,6 +2259,10 @@
       if (!confirm('Delete this conversation? This cannot be undone.')) return;
       
       delete conversations[conversationId];
+      if (drafts[conversationId]) {
+        delete drafts[conversationId];
+        saveDrafts();
+      }
       
       // If deleted conversation was active, switch to another or create new
       if (activeConversationId === conversationId) {
@@ -2125,6 +2275,26 @@
         }
       }
       
+      saveAllConversations();
+      renderConversationList();
+    }
+
+    function renameConversation(conversationId) {
+      const convo = conversations[conversationId];
+      if (!convo) return;
+      const newTitle = prompt('Rename conversation', convo.title);
+      if (!newTitle) return;
+      convo.title = newTitle.trim().slice(0, 60) || convo.title;
+      convo.updated = Date.now();
+      saveAllConversations();
+      renderConversationList();
+    }
+
+    function togglePinConversation(conversationId) {
+      const convo = conversations[conversationId];
+      if (!convo) return;
+      convo.pinned = !convo.pinned;
+      convo.updated = Date.now();
       saveAllConversations();
       renderConversationList();
     }
@@ -2142,6 +2312,9 @@
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           conversations = JSON.parse(stored);
+          Object.values(conversations).forEach(convo => {
+            if (typeof convo.pinned !== 'boolean') convo.pinned = false;
+          });
           
           // Load active conversation
           const activeId = localStorage.getItem(ACTIVE_CONVO_KEY);
@@ -2176,15 +2349,30 @@
       
       // Sort by updated time (most recent first)
       const sortedIds = Object.keys(conversations).sort((a, b) => {
+        const aPinned = conversations[a].pinned ? 1 : 0;
+        const bPinned = conversations[b].pinned ? 1 : 0;
+        if (aPinned !== bPinned) return bPinned - aPinned;
         return conversations[b].updated - conversations[a].updated;
       });
+
+      const term = (conversationSearch?.value || '').trim().toLowerCase();
+      const filteredIds = term
+        ? sortedIds.filter(id => {
+            const convo = conversations[id];
+            const titleMatch = (convo.title || '').toLowerCase().includes(term);
+            const messageMatch = convo.messages?.some(msg =>
+              (msg.content || '').toLowerCase().includes(term)
+            );
+            return titleMatch || messageMatch;
+          })
+        : sortedIds;
       
-      sortedIds.forEach(id => {
+      filteredIds.forEach(id => {
         const convo = conversations[id];
         const item = document.createElement('div');
         item.className = 'conversation-item' + (id === activeConversationId ? ' active' : '');
         item.onclick = (e) => {
-          if (!e.target.classList.contains('conversation-delete')) {
+          if (!e.target.closest('.conversation-delete') && !e.target.closest('.conversation-pin') && !e.target.closest('.conversation-rename')) {
             switchConversation(id);
           }
         };
@@ -2194,7 +2382,11 @@
           <div class="conversation-meta">
             <span class="conversation-date">${formatDate(convo.updated)}</span>
             <span class="conversation-tokens" title="Estimated tokens">⚡${convo.tokenCount}</span>
-            <button class="conversation-delete" onclick="event.stopPropagation(); deleteConversation('${id}')" title="Delete">🗑️</button>
+            <span class="conversation-actions">
+              <button class="conversation-pin ${convo.pinned ? 'active' : ''}" onclick="event.stopPropagation(); togglePinConversation('${id}')" title="Pin"><i class="fa-solid fa-thumbtack"></i></button>
+              <button class="conversation-rename" onclick="event.stopPropagation(); renameConversation('${id}')" title="Rename"><i class="fa-solid fa-pen"></i></button>
+              <button class="conversation-delete" onclick="event.stopPropagation(); deleteConversation('${id}')" title="Delete">🗑️</button>
+            </span>
           </div>
         `;
         
@@ -2317,6 +2509,7 @@
     }
 
     function sendMessageHandler() {
+      stopSpeech();
       const placeholderEl = getPlaceholder();
       if (placeholderEl) placeholderEl.style.display = 'none';
 
@@ -2331,6 +2524,8 @@
       const loadingMessageId = addLoadingMessage();
       userInput.value = '';
       updateCharCounter();
+      resizeInput();
+      setDraftForActiveConversation('');
       setSendLoading(true);
       doFetch(userMessage, loadingMessageId);
     }
@@ -2341,9 +2536,14 @@
       messageDiv.innerHTML = `
         <div class="user-message-inner">
           <span class="user-message-text">${escapeHtml(message)}</span>
+          <span class="user-message-actions">
+            <button type="button" class="icon-btn edit-btn" aria-label="Edit message">${ICON_TEMPLATES.edit}</button>
+          </span>
         </div>
       `;
       chatBox.appendChild(messageDiv);
+      const editBtn = messageDiv.querySelector('.edit-btn');
+      if (editBtn) editBtn.addEventListener('click', () => startEditMessage(editBtn));
       if (save) {
         updateActiveConversation(message, null);
       }
@@ -2405,10 +2605,141 @@
      const ICON_TEMPLATES = {
        clock: '<i class="fa-regular fa-clock" aria-hidden="true"></i>',
        regenerate: '<i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i>',
-       copy: '<i class="fa-solid fa-clone" aria-hidden="true"></i>'
+       copy: '<i class="fa-solid fa-clone" aria-hidden="true"></i>',
+       speak: '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>',
+       edit: '<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>'
      };
 
-    function createAiMessageFooter(timestamp, showRegenerate = true) {
+    function stopSpeech() {
+      if (activeSpeechUtterance) {
+        speechSynthesis.cancel();
+        activeSpeechUtterance = null;
+      }
+      if (activeSpeechButton) {
+        activeSpeechButton.classList.remove('active');
+        activeSpeechButton = null;
+      }
+    }
+
+    function toggleSpeech(button, text) {
+      if (!text) return;
+      if (activeSpeechButton === button) {
+        stopSpeech();
+        return;
+      }
+      stopSpeech();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.onend = stopSpeech;
+      utterance.onerror = stopSpeech;
+      activeSpeechUtterance = utterance;
+      activeSpeechButton = button;
+      button.classList.add('active');
+      speechSynthesis.speak(utterance);
+    }
+
+    function createQuickReplies() {
+      const replies = [
+        { label: 'Explain simpler', prompt: 'Explain that in simpler terms.' },
+        { label: 'Give examples', prompt: 'Can you give a few examples?' },
+        { label: 'Summarize', prompt: 'Summarize the key points briefly.' },
+        { label: 'Continue', prompt: 'Please continue.' }
+      ];
+      const wrapper = document.createElement('div');
+      wrapper.className = 'quick-replies';
+      replies.forEach(({ label, prompt }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quick-reply';
+        btn.textContent = label;
+        btn.addEventListener('click', () => {
+          userInput.value = prompt;
+          updateCharCounter();
+          resizeInput();
+          setDraftForActiveConversation(prompt);
+          sendMessageHandler();
+        });
+        wrapper.appendChild(btn);
+      });
+      return wrapper;
+    }
+
+    function startEditMessage(button) {
+      const userMsgEl = button.closest('.user-message');
+      if (!userMsgEl) return;
+      const textEl = userMsgEl.querySelector('.user-message-text');
+      const actionsEl = userMsgEl.querySelector('.user-message-actions');
+      if (!textEl || !actionsEl) return;
+      if (userMsgEl.dataset.editing === 'true') return;
+
+      userMsgEl.dataset.editing = 'true';
+      const originalText = textEl.textContent || '';
+
+      const textarea = document.createElement('textarea');
+      textarea.className = 'edit-message-textarea';
+      textarea.value = originalText;
+
+      textEl.replaceWith(textarea);
+      actionsEl.innerHTML = `
+        <button type="button" class="icon-btn save-edit-btn" aria-label="Save edit"><i class="fa-solid fa-check"></i></button>
+        <button type="button" class="icon-btn cancel-edit-btn" aria-label="Cancel edit"><i class="fa-solid fa-xmark"></i></button>
+      `;
+
+      const saveBtn = actionsEl.querySelector('.save-edit-btn');
+      const cancelBtn = actionsEl.querySelector('.cancel-edit-btn');
+
+      const restoreView = (value) => {
+        const span = document.createElement('span');
+        span.className = 'user-message-text';
+        span.textContent = value;
+        textarea.replaceWith(span);
+        actionsEl.innerHTML = `<button type="button" class="icon-btn edit-btn" aria-label="Edit message">${ICON_TEMPLATES.edit}</button>`;
+        const editBtn = actionsEl.querySelector('.edit-btn');
+        if (editBtn) editBtn.addEventListener('click', () => startEditMessage(editBtn));
+        userMsgEl.dataset.editing = 'false';
+      };
+
+      const saveEdit = () => {
+        const newText = textarea.value.trim();
+        if (!newText) {
+          restoreView(originalText);
+          return;
+        }
+        applyEditedMessage(userMsgEl, newText);
+        restoreView(newText);
+      };
+
+      if (saveBtn) saveBtn.addEventListener('click', saveEdit);
+      if (cancelBtn) cancelBtn.addEventListener('click', () => restoreView(originalText));
+      textarea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveEdit();
+        if (e.key === 'Escape') restoreView(originalText);
+      });
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+    }
+
+    function applyEditedMessage(userMsgEl, newText) {
+      if (!activeConversationId || !conversations[activeConversationId]) return;
+      const messages = Array.from(chatBox.querySelectorAll('.message'));
+      const idx = messages.indexOf(userMsgEl);
+      if (idx < 0) return;
+
+      const convo = conversations[activeConversationId];
+      convo.messages = convo.messages.slice(0, idx);
+      if (idx === 0) {
+        convo.title = generateTitle(newText);
+      }
+      saveAllConversations();
+
+      messages.slice(idx).forEach(el => el.remove());
+      addUserMessage(newText, false);
+      const loadingMessageId = addLoadingMessage();
+      setSendLoading(true);
+      doFetch(newText, loadingMessageId);
+    }
+
+    function createAiMessageFooter(timestamp, showRegenerate = true, speechText = '') {
       const footer = document.createElement('div');
       footer.className = 'ai-message-footer';
 
@@ -2427,6 +2758,16 @@
         regenBtn.innerHTML = ICON_TEMPLATES.regenerate;
         regenBtn.addEventListener('click', () => regenerateResponse(regenBtn));
         actions.appendChild(regenBtn);
+      }
+
+      if (speechText && 'speechSynthesis' in window) {
+        const speakBtn = document.createElement('button');
+        speakBtn.type = 'button';
+        speakBtn.className = 'icon-btn speak-btn';
+        speakBtn.setAttribute('aria-label', 'Read aloud');
+        speakBtn.innerHTML = ICON_TEMPLATES.speak;
+        speakBtn.addEventListener('click', () => toggleSpeech(speakBtn, speechText));
+        actions.appendChild(speakBtn);
       }
 
       const copyBtn = document.createElement('button');
@@ -2475,7 +2816,8 @@
       await loadMarked();
       contentDiv.innerHTML = marked.parse(content);
       aiMessageContent.appendChild(contentDiv);
-      aiMessageContent.appendChild(createAiMessageFooter(timestamp, true));
+      aiMessageContent.appendChild(createAiMessageFooter(timestamp, true, contentDiv.textContent || ''));
+      aiMessageContent.appendChild(createQuickReplies());
       messageDiv.appendChild(aiMessageContent);
       chatBox.appendChild(messageDiv);
 
@@ -2499,7 +2841,8 @@
       await loadMarked();
       contentDiv.innerHTML = marked.parse(content);
       aiMessageContent.appendChild(contentDiv);
-      aiMessageContent.appendChild(createAiMessageFooter(timestamp, showRegenerate));
+      aiMessageContent.appendChild(createAiMessageFooter(timestamp, showRegenerate, contentDiv.textContent || ''));
+      aiMessageContent.appendChild(createQuickReplies());
       loadingElement.appendChild(aiMessageContent);
 
       if (typeof Prism !== 'undefined') {
@@ -2610,7 +2953,7 @@
     }
 
     function showInstallPromptToast() {
-      if (!deferredPrompt) return;
+      if (!deferredPrompt || !isMobileDevice) return;
       showToast('Install QuickGPT for quick access', 'info', {
         actionLabel: 'Install',
         actionHandler: async () => {
@@ -2635,6 +2978,7 @@
     }
 
     window.addEventListener('beforeinstallprompt', (event) => {
+      if (!isMobileDevice) return;
       event.preventDefault();
       deferredPrompt = event;
       showInstallPromptToast();
@@ -2654,12 +2998,6 @@
         .catch((error) => {
           console.warn('Service worker registration failed:', error);
         });
-    }
-
-    function showVersionToast() {
-      if (versionToastShown) return;
-      versionToastShown = true;
-      showToast(`QuickGPT ${APP_VERSION} (${APP_PATCH})`, 'info', { duration: 4000 });
     }
 
     function downloadExport(blob, filename) {
@@ -2731,6 +3069,8 @@
       userInput.value = '';
       userInput.focus();
       updateCharCounter();
+      resizeInput();
+      setDraftForActiveConversation('');
     }
 
     function scrollToBottom() {
@@ -2830,8 +3170,8 @@
     });
     userInput.addEventListener('input', function () {
       updateCharCounter();
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+      resizeInput();
+      setDraftForActiveConversation(userInput.value);
     });
 
     userInput.addEventListener('paste', (e) => {
@@ -2850,8 +3190,8 @@
         userInput.selectionStart = userInput.selectionEnd = Math.min(start + text.length, MAX_CHARS);
       }
       updateCharCounter();
-      userInput.style.height = 'auto';
-      userInput.style.height = Math.min(userInput.scrollHeight, 200) + 'px';
+      resizeInput();
+      setDraftForActiveConversation(userInput.value);
     });
 
     document.addEventListener('keydown', function (e) {
@@ -2897,6 +3237,7 @@
 
     // Initialize
     loadApiConfig();
+    loadDrafts();
     
     // Restore sidebar state - default to collapsed on all screens
     try {
@@ -2921,7 +3262,6 @@
     applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
     loadAllConversations();
     updateScrollToBottomVisibility();
-    showVersionToast();
   </script>
   <script src="prism.js"></script>
 </body>
