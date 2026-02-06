@@ -1700,7 +1700,6 @@
     <div class="input-container">
       <div class="input-wrapper">
         <textarea id="user-input" placeholder="Type your message..." autofocus aria-label="Message input" maxlength="2000" rows="1"></textarea>
-        <div class="char-counter" id="char-counter">0 / 2000</div>
       </div>
       <button id="send-button" type="button" aria-label="Send message">Send</button>
       <button id="stop-button" type="button" class="stop-btn" aria-label="Stop generation" style="display: none;">Stop</button>
@@ -2221,7 +2220,7 @@
       return id;
     }
 
-    function switchConversation(conversationId) {
+    async function switchConversation(conversationId) {
       if (!conversations[conversationId]) return;
       
       activeConversationId = conversationId;
@@ -2232,13 +2231,13 @@
       
       // Load conversation messages
       const convo = conversations[conversationId];
-      convo.messages.forEach(msg => {
+      for (const msg of convo.messages) {
         if (msg.role === 'user') {
           addUserMessage(msg.content, false);
         } else if (msg.role === 'assistant') {
-          addAIMessage(msg.content, false);
+          await addAIMessage(msg.content, false);
         }
-      });
+      }
       
       // On mobile, respect the user's sidebar preference
       // (Don't auto-collapse, let them control it with the burger menu)
@@ -3033,9 +3032,11 @@
 
     function updateCharCounter() {
       const length = userInput.value.length;
-      charCounter.textContent = length + ' / ' + MAX_CHARS;
-      charCounter.classList.toggle('warning', length > MAX_CHARS * 0.8);
-      charCounter.classList.toggle('danger', length > MAX_CHARS * 0.95);
+      if (charCounter) {
+        charCounter.textContent = length + ' / ' + MAX_CHARS;
+        charCounter.classList.toggle('warning', length > MAX_CHARS * 0.8);
+        charCounter.classList.toggle('danger', length > MAX_CHARS * 0.95);
+      }
       sendButton.disabled = sendButton.getAttribute('aria-busy') === 'true' || length > MAX_CHARS;
     }
 
