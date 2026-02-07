@@ -12,6 +12,31 @@
 [functions]
   # Functions will use default timeout (10s)
 
+# Legacy host redirects
+[[redirects]]
+  from = "https://quickchatgpt.uft1.com/*"
+  to = "https://chat.uft1.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://gptfree.uft1.com/*"
+  to = "https://chat.uft1.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://chatgpt.uft1.com/*"
+  to = "https://chat.uft1.com/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://quickchatgpt.netlify.app/*"
+  to = "https://chat.uft1.com/:splat"
+  status = 301
+  force = true
+
 # Redirect rules for SPA behavior
 [[redirects]]
   from = "/*"
