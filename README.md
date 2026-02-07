@@ -1,26 +1,30 @@
 # QuickGPT
 
-A fast, modern AI chat interface with markdown support, dark/light theme, and Netlify serverless backend (OpenAI GPT-3.5 & Claude).
+A fast, modern AI chat interface with markdown support, dark/light theme, Netlify serverless backend (OpenAI GPT-3.5 & Claude), and progressive web app polish.
 
 ![QuickGPT](./public/quickgpt-screenshot.png)
 
 ## Features
 
-- **Chat** – Multi-turn conversation with conversation history sent to the API
-- **Markdown & code** – AI replies rendered as markdown with Prism.js syntax highlighting
-- **Multi-line input** – Textarea with Enter to send, Shift+Enter for new line (max 2000 chars)
-- **Suggested prompts** – Example questions on empty state to get started
-- **Regenerate** – Regenerate the last AI response for any message
-- **Stop** – Cancel in-flight requests
-- **Copy** – Copy user or AI messages to clipboard
-- **Delete** – Remove a user/AI pair from the thread (and history)
-- **Export** – Download chat as JSON, TXT, Markdown, or all three (dropdown)
-- **Persistent chat** – Conversation saved in `localStorage` and restored on refresh
-- **New chat** – Clear thread and history; shortcut **⌘K** / **Ctrl+K**
-- **Theme** – Light/dark toggle (preference stored in `localStorage`)
-- **429 retry** – On rate limit, toast with “Retry” to resend the last message
-- **Scroll to bottom** – Button appears when scrolled up; click to jump to latest
-- **Accessibility** – ARIA labels, roles, keyboard (Escape clears input)
+- **Chat** – Multi-turn conversations with OpenAI Claude and GPT-3.5 models
+- **Markdown & code** – AI replies rendered as markdown with Prism.js syntax highlighting and copy buttons
+- **Drafts per conversation** – Inputs are auto saved locally per chat
+- **Quick replies** – Suggested follow-up prompts (“Explain simpler”, “Give examples”, etc.)
+- **Message edit & resend** – Edit any user message and regenerate from that point
+- **Regenerate / stop** – Regenerate the last AI response or cancel in-flight requests
+- **Read aloud** – Listen to any AI reply with Web Speech API voice controls
+- **Conversation management** – Rename, pin, delete, reorder via searchable sidebar
+- **Export & copy** – Download chat history (JSON/TXT/MD) and copy individual responses
+- **PWA-ready** – Manifest + service worker + install prompt keep the UI installable on mobile
+- **Keyboard-aware layout** – Input stays visible above the Android keyboard with soft scrolling tweaks
+- **Accessibility** – ARIA labels, roles, keyboard support (Escape clears input)
+- **Retry toast** – “Retry” button surfaces automatically on rate limits (429)
+
+## Live preview
+
+- Web app: [https://chat.uft1.com](https://chat.uft1.com)
+- Legacy vanity hosts now redirect to the new domain via Netlify config above
+- More projects and info: [https://jovylle.com](https://jovylle.com)
 
 ## Setup
 
@@ -44,11 +48,11 @@ A fast, modern AI chat interface with markdown support, dark/light theme, and Ne
    npx netlify dev
    ```
 
-   Or serve the `public` folder (e.g. `npx serve public`) and call the deployed `/.netlify/functions/chat` if already live.
+   Or serve the `public` folder (e.g. `npx serve public`) and point to the deployed `/.netlify/functions/chat` if already live.
 
 4. **Deploy**
 
-   Connect the repo to Netlify; build command can be empty, publish directory: `public`, functions: `netlify/functions`.
+   Connect the repo to Netlify; build command can be empty, publish directory: `public`, functions: `netlify/functions`. Netlify’s redirect rules ensure the SPA works and legacy hosts keep pointing to `chat.uft1.com`.
 
 ## Project structure
 
