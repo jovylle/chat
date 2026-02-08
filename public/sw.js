@@ -8,6 +8,7 @@ const ASSETS_TO_CACHE = [
   '/script.js',
   '/manifest.webmanifest',
   '/chat-assistant-box-icon.png',
+  '/chat-assistant-box-icon-192.png',
   '/chat-assistant-box-screenshot.png'
 ];
 
