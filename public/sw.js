@@ -1,4 +1,4 @@
-const CACHE_NAME = 'quickgpt-shell-v1';
+const CACHE_NAME = 'chat-assistant-box-shell-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -7,8 +7,8 @@ const ASSETS_TO_CACHE = [
   '/prism.js',
   '/script.js',
   '/manifest.webmanifest',
-  '/quickgpt-icon.png',
-  '/quickgpt-screenshot.png'
+  '/chat-assistant-box-icon.png',
+  '/chat-assistant-box-screenshot.png'
 ];
 
 self.addEventListener('install', (event) => {

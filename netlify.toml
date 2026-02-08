@@ -1,4 +1,4 @@
-# QuickGPT Netlify Configuration
+# Chat Assistant Box Netlify Configuration
 [build]
   command = "# no build command"
   functions = "netlify/functions"

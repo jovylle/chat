@@ -1,8 +1,8 @@
-# QuickGPT
+# Chat Assistant Box
 
 A fast, modern AI chat interface with markdown support, dark/light theme, Netlify serverless backend (OpenAI GPT-3.5 & Claude), and progressive web app polish.
 
-![QuickGPT](./public/quickgpt-screenshot.png)
+![Chat Assistant Box](./public/chat-assistant-box-screenshot.png)
 
 ## Features
 
@@ -53,6 +53,26 @@ A fast, modern AI chat interface with markdown support, dark/light theme, Netlif
 4. **Deploy**
 
    Connect the repo to Netlify; build command can be empty, publish directory: `public`, functions: `netlify/functions`. Netlify’s redirect rules ensure the SPA works and legacy hosts keep pointing to `chat.uft1.com`.
+
+## Android app (APK/AAB for Google Play)
+
+The app is a PWA; to publish on Google Play you need an Android package (AAB preferred, or APK). Easiest path:
+
+1. **PWA Builder (recommended)**  
+   - Go to [pwabuilder.com](https://www.pwabuilder.com/).  
+   - Enter your live URL: `https://chat.uft1.com`.  
+   - Click **Start**, then **Package for stores** → **Android** → follow the flow.  
+   - Download the generated Android project or signed AAB/APK. To keep the AAB in this repo (one-time), copy the `.aab` file into the **`releases/`** folder (see `releases/README.md`).  
+   - For Play Store: upload the **AAB** in [Play Console](https://play.google.com/console) → your app → **Production** → **Create new release** → upload the AAB.
+
+2. **Optional: TWA with Bubblewrap (reproducible build)**  
+   - Install: `npm i -g @bubblewrap/cli`, then `bubblewrap init`.  
+   - Use manifest URL: `https://chat.uft1.com/manifest.webmanifest`.  
+   - Complete the wizard (package ID e.g. `com.uft1.chatassistantbox`), then build:  
+     `bubblewrap build` (produces AAB/APK in the project output folder).  
+   - Sign the AAB with your Play upload key (Bubblewrap can generate a key or use an existing one).
+
+After deploying any manifest changes, re-run PWA Builder or Bubblewrap so the store package uses the updated PWA.
 
 ## Project structure
 
