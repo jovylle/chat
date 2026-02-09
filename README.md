@@ -66,7 +66,7 @@ Need to rotate your own key? Clear all data in the settings menu and re-enter a 
 
 ## Privacy policy
 
-A policy page lives at `https://chat.uft1.com/privacy-policy.html` (also deployable via `public/privacy-policy.html`). It documents:
+A policy page lives at `https://chat.uft1.com/privacy-policy/` (also deployable via `public/privacy-policy/index.html`). It documents:
 
 - What data the Netlify function sees (messages, optional history, provider choice, timestamps).
 - How conversation history, drafts, and API preferences stay in `localStorage` only, and how you can clear them from settings.
