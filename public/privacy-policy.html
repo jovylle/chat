@@ -82,21 +82,21 @@
       <p>
         The messages you type and the AI responses displayed on-screen are kept in your browser’s
         <em>localStorage</em>; we do not send or retain conversation history anywhere else permanently.
-        When you send a message, the Netlify function at <code>/.netlify/functions/chat</code> receives
-        the request body (message, optional history, model, system prompt, and any custom API key you provide)
-        to forward it to OpenAI or Anthropic. This proxy only stores the request briefly to generate a response
-        and then discards it. Exception logs may be kept for debugging, but we do not use them for profiling
-        or advertising.
+        When you send a message using the default experience, the Netlify function at <code>/.netlify/functions/chat</code>
+        receives the request body (message, optional history, model, system prompt) and relays it to OpenAI or Anthropic.
+        The proxy briefly holds the payload to generate a response and then discards it. Exception logs may be kept
+        for debugging, but we do not use them for profiling or advertising. If you enable “Use Your Own API Key,” the
+        browser sends the same payload directly to your chosen provider so our proxy never sees your key.
       </p>
     </section>
 
     <section>
       <h2>Custom API keys</h2>
       <p>
-        If you enable “Use Your Own API Key” inside the settings, the key is saved only inside your browser
-        and re-applied to each request so the Netlify proxy can authenticate directly with OpenAI or Anthropic.
-        The key is never shipped to our servers outside of that request and is not written to logs. Clearing data
-        in the settings removes the key immediately.
+        If you enable “Use Your Own API Key,” the key is saved only inside your browser and is used to call OpenAI
+        or Anthropic directly via the public REST endpoints. The Netlify proxy is bypassed entirely in this mode,
+        so we never receive or log the custom key; clearing the app data removes it immediately. Switch the toggle
+        off or clear data anytime you want to stop using a particular key.
       </p>
     </section>
 

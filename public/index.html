@@ -2488,18 +2488,20 @@
       currentAbortController = new AbortController();
       
       // Prepare request body
+      const history = getActiveConversationHistory();
       const requestBody = {
         message: userMessage,
-        history: getActiveConversationHistory(),
+        history: history,
         model: apiConfig.model, // Always send model
         systemPrompt: apiConfig.systemPrompt // Always send custom instructions
       };
-      
-      // Add custom API config if using custom key
+
       if (apiConfig.useCustomKey && apiConfig.apiKey) {
-        requestBody.customApiKey = apiConfig.apiKey;
-        requestBody.provider = apiConfig.provider;
+        sendViaCustomKey(userMessage, history, loadingMessageId);
+        return;
       }
+
+      requestBody.provider = apiConfig.provider;
       
       fetch('/.netlify/functions/chat', {
         method: 'POST',
@@ -2508,33 +2510,127 @@
         signal: currentAbortController.signal
       })
         .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
-        .then(async ({ ok, status, data }) => {
-          const errorMsg = data.error || (ok ? null : 'Request failed');
-          const aiMessage = ok ? data.message : ('**Error:** ' + (errorMsg || 'Please try again.'));
-          await replaceLoadingMessage(loadingMessageId, aiMessage);
-          if (ok) {
-            updateActiveConversation(userMessage, data.message);
-            lastFailedUserMessage = null;
-          } else {
-            if (status === 429) lastFailedUserMessage = userMessage;
-            showToast(errorMsg || 'Something went wrong.', 'error', status === 429 ? userMessage : null);
-          }
-          setSendLoading(false);
-          updateCharCounter();
-          scrollToBottom();
-        })
-        .catch(error => {
-          if (error.name === 'AbortError') {
-            replaceLoadingMessage(loadingMessageId, '*Generation stopped.*');
-          } else {
-            console.error('An error occurred:', error);
-            replaceLoadingMessage(loadingMessageId, 'Sorry, having trouble connecting. Please check your connection and try again.');
-            showToast('Connection error. Please try again.', 'error');
-          }
-          setSendLoading(false);
-          updateCharCounter();
-          scrollToBottom();
+        .then(result => handleResponseResult(result, userMessage, loadingMessageId))
+        .catch(error => handleRequestError(error, loadingMessageId));
+    }
+
+    async function sendViaCustomKey(userMessage, history, loadingMessageId) {
+      const provider = apiConfig.provider;
+      if (provider !== 'openai' && provider !== 'anthropic') {
+        await handleResponseResult({
+          ok: false,
+          status: 400,
+          data: { error: `Provider "${provider}" is not supported yet.` }
+        }, userMessage, loadingMessageId);
+        return;
+      }
+
+      const systemPrompt = apiConfig.systemPrompt || 'You are a helpful chat assistant.';
+      const payload = {
+        model: apiConfig.model,
+        max_tokens: 1024,
+        temperature: 0.7,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...history,
+          { role: 'user', content: userMessage }
+        ]
+      };
+
+      if (provider === 'anthropic') {
+        payload.system = systemPrompt;
+      }
+
+      const endpoint = provider === 'anthropic'
+        ? 'https://api.anthropic.com/v1/chat/completions'
+        : 'https://api.openai.com/v1/chat/completions';
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (provider === 'anthropic') {
+        headers['x-api-key'] = apiConfig.apiKey;
+      } else {
+        headers['Authorization'] = 'Bearer ' + apiConfig.apiKey;
+      }
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload),
+          signal: currentAbortController.signal
         });
+        const data = await response.json();
+        const result = { ok: response.ok, status: response.status, data: {} };
+
+        if (response.ok) {
+          const aiMessage = provider === 'anthropic'
+            ? extractAnthropicMessage(data)
+            : data?.choices?.[0]?.message?.content;
+
+          if (aiMessage) {
+            result.data.message = aiMessage;
+          } else {
+            result.data.error = 'No response from the AI.';
+          }
+        } else {
+          result.data.error = data?.error?.message || data?.error || 'Request failed';
+        }
+
+        await handleResponseResult(result, userMessage, loadingMessageId);
+      } catch (error) {
+        handleRequestError(error, loadingMessageId);
+      }
+    }
+
+    function extractAnthropicMessage(data) {
+      const choice = data?.choices?.[0];
+      if (choice?.message?.content) {
+        const content = choice.message.content;
+        if (typeof content === 'string') return content;
+        if (Array.isArray(content)) {
+          return content.map(part => {
+            if (typeof part === 'string') return part;
+            return part?.text || part?.value || '';
+          }).join('');
+        }
+        if (typeof content === 'object') {
+          return content.text || content.value || '';
+        }
+      }
+      if (typeof data?.completion === 'string') return data.completion;
+      return null;
+    }
+
+    async function handleResponseResult({ ok, status, data }, userMessage, loadingMessageId) {
+      const errorMsg = data.error || (ok ? null : 'Request failed');
+      const aiMessage = ok
+        ? data.message
+        : ('**Error:** ' + (errorMsg || 'Please try again.'));
+
+      await replaceLoadingMessage(loadingMessageId, aiMessage);
+      if (ok) {
+        updateActiveConversation(userMessage, data.message);
+        lastFailedUserMessage = null;
+      } else {
+        if (status === 429) lastFailedUserMessage = userMessage;
+        showToast(errorMsg || 'Something went wrong.', 'error', status === 429 ? userMessage : null);
+      }
+      setSendLoading(false);
+      updateCharCounter();
+      scrollToBottom();
+    }
+
+    async function handleRequestError(error, loadingMessageId) {
+      if (error.name === 'AbortError') {
+        await replaceLoadingMessage(loadingMessageId, '*Generation stopped.*');
+      } else {
+        console.error('An error occurred:', error);
+        await replaceLoadingMessage(loadingMessageId, 'Sorry, having trouble connecting. Please check your connection and try again.');
+        showToast('Connection error. Please try again.', 'error');
+      }
+      setSendLoading(false);
+      updateCharCounter();
+      scrollToBottom();
     }
 
     function stopRequest() {

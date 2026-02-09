@@ -56,11 +56,11 @@ A fast, modern AI chat interface with markdown support, dark/light theme, Netlif
 
 ## API configuration
 
-The UI talks to `/.netlify/functions/chat`. Netlify reads `MY_OPENAI_API` (and optionally `MY_CLAUDE_API`) from your site settings, so the default experience uses keys you control in production. For personal devices you can also run the chat with your own OpenAI or Anthropic key:
+The UI talks to `/.netlify/functions/chat`. Netlify reads `MY_OPENAI_API` (and optionally `MY_CLAUDE_API`) from your site settings, so the default experience uses keys you control in production. For personal devices you can also run the chat with your own OpenAI or Anthropic key, and that key is used to call the provider endpoints directly from your browser:
 
 - Open the gear icon in the top-right, toggle **Use Your Own API Key**, select the provider, and paste your key (`sk-...` for OpenAI, whatever Anthropic provides).
 - Choose any supported model (GPT-3.5, GPT-4, GPT-4o, Claude 3.x) and optionally enter custom system instructions—those settings are saved to `localStorage`.
-- The key never leaves your browser storage except for the request that proxies through the Netlify function, so it won’t be logged or persisted on the server.
+- The key never leaves your browser storage; when the custom key toggle is active the browser calls OpenAI or Anthropic directly, so our Netlify proxy never sees or logs it.
 
 Need to rotate your own key? Clear all data in the settings menu and re-enter a fresh key (or just toggle the custom key switch off).
 
