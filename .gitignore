@@ -5,3 +5,10 @@ node_modules
 .netlify
 .env
 android.keystore
+app/
+build/
+gradle/
+gradlew
+gradlew.bat
+manifest-checksum.txt
+store_icon.png
