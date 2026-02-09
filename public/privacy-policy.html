@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy · Chat Assistant Box</title>
+  <meta name="description" content="Privacy policy for Chat Assistant Box.">
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #0b0c10;
+      color: #f8fafc;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    main {
+      width: min(960px, 100%);
+      padding: 32px clamp(16px, 3vw, 32px) 48px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+    }
+
+    h2 {
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+
+    section + section {
+      margin-top: 28px;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    a {
+      color: #94a3b8;
+      text-decoration: underline;
+    }
+
+    small {
+      display: block;
+      margin-top: 24px;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+
+    footer {
+      width: min(960px, 100%);
+      padding: 24px clamp(16px, 3vw, 32px);
+      font-size: 0.85rem;
+      text-align: center;
+      color: #94a3b8;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Privacy Policy</h1>
+    <p>Effective date: February 9, 2026.</p>
+    <p>
+      Chat Assistant Box is a Progressive Web App that runs entirely in your browser with a
+      small Netlify-powered API proxy. This page explains how we handle the information collected
+      while you use the app or the Play Store release.
+    </p>
+
+    <section>
+      <h2>Information we collect</h2>
+      <p>
+        The messages you type and the AI responses displayed on-screen are kept in your browser’s
+        <em>localStorage</em>; we do not send or retain conversation history anywhere else permanently.
+        When you send a message, the Netlify function at <code>/.netlify/functions/chat</code> receives
+        the request body (message, optional history, model, system prompt, and any custom API key you provide)
+        to forward it to OpenAI or Anthropic. This proxy only stores the request briefly to generate a response
+        and then discards it. Exception logs may be kept for debugging, but we do not use them for profiling
+        or advertising.
+      </p>
+    </section>
+
+    <section>
+      <h2>Custom API keys</h2>
+      <p>
+        If you enable “Use Your Own API Key” inside the settings, the key is saved only inside your browser
+        and re-applied to each request so the Netlify proxy can authenticate directly with OpenAI or Anthropic.
+        The key is never shipped to our servers outside of that request and is not written to logs. Clearing data
+        in the settings removes the key immediately.
+      </p>
+    </section>
+
+    <section>
+      <h2>Third-party services</h2>
+      <p>
+        The chat backend relies on OpenAI (GPT-3.5, GPT-4, GPT-4o) and Anthropic (Claude) to generate responses.
+        Hosting and the serverless function are provided by Netlify, which may log traffic for operational purposes.
+        Static assets load from CDNs (Font Awesome, Prism.js, etc.) to keep the UI lightweight. We only share your
+        requests with the third party you’ve chosen—OpenAI or Anthropic via their official APIs.
+      </p>
+    </section>
+
+    <section>
+      <h2>Cookies & local storage</h2>
+      <p>
+        Local storage holds conversations, drafts, API configuration, theme preference, and sidebar state. No cookies
+        are written by this code, although Netlify and Cloudflare (via caching) may set their own cookies for
+        performance. You can delete everything by clicking “Clear All Data” in the settings menu.
+      </p>
+    </section>
+
+    <section>
+      <h2>Security</h2>
+      <p>
+        All requests go over HTTPS, and the serverless proxy uses official SDK clients and kept-secret environment
+        variables (`MY_OPENAI_API` / `MY_CLAUDE_API`). The app never stores your custom API key on disk outside
+        your browser’s storage, and no third-party analytics or ads run inside the UI.
+      </p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p>
+        Questions or concerns? File an issue at
+        <a href="https://github.com/jovylle/chat/issues" target="_blank" rel="noopener noreferrer">github.com/jovylle/chat/issues</a>
+        or visit <a href="https://jovylle.com" target="_blank" rel="noopener noreferrer">jovylle.com</a>.
+      </p>
+    </section>
+
+    <small>Policy version 1.0 · Built for Chat Assistant Box (chat.uft1.com).</small>
+  </main>
+  <footer>
+    <p>
+      <a href="index.html">Return to Chat Assistant Box</a>
+    </p>
+  </footer>
+</body>
+</html>

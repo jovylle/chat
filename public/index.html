@@ -1633,6 +1633,25 @@
         font-size: 16px;
       }
     }
+
+    .app-footer {
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+    }
+
+    .app-footer a {
+      color: var(--accent-color);
+      text-decoration: underline;
+    }
+
+    .app-footer span {
+      display: block;
+      line-height: 1.5;
+    }
   </style>
 </head>
 
@@ -1799,9 +1818,24 @@
         <p style="font-size: var(--font-xs);">
           Learn more or contribute on <a href="https://github.com/jovylle/chat" style="color: var(--accent-color);" target="_blank" rel="noopener noreferrer">github.com/jovylle/chat</a>
         </p>
+        <p style="font-size: var(--font-xs);">
+          Privacy policy: <a href="privacy-policy.html" style="color: var(--accent-color);" target="_blank" rel="noopener noreferrer">chat.uft1.com/privacy-policy.html</a>
+        </p>
+        <p style="font-size: var(--font-xs);">
+          Enable "Use Your Own API Key" in the settings to keep your OpenAI or Anthropic credentials on-device while still powering the chat interface.
+        </p>
       </div>
     </div>
   </div>
+
+  <footer class="app-footer">
+    <span>
+      Privacy policy available at <a href="privacy-policy.html" target="_blank" rel="noopener noreferrer">chat.uft1.com/privacy-policy.html</a>
+    </span>
+    <span>
+      Use the settings gear to toggle "Use Your Own API Key" whenever you want to run with your own OpenAI or Anthropic key.
+    </span>
+  </footer>
 
   <script>
     const STORAGE_KEY = 'quickgpt_conversations';

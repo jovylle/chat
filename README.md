@@ -54,6 +54,25 @@ A fast, modern AI chat interface with markdown support, dark/light theme, Netlif
 
    Connect the repo to Netlify; build command can be empty, publish directory: `public`, functions: `netlify/functions`. Netlify’s redirect rules ensure the SPA works and legacy hosts keep pointing to `chat.uft1.com`.
 
+## API configuration
+
+The UI talks to `/.netlify/functions/chat`. Netlify reads `MY_OPENAI_API` (and optionally `MY_CLAUDE_API`) from your site settings, so the default experience uses keys you control in production. For personal devices you can also run the chat with your own OpenAI or Anthropic key:
+
+- Open the gear icon in the top-right, toggle **Use Your Own API Key**, select the provider, and paste your key (`sk-...` for OpenAI, whatever Anthropic provides).
+- Choose any supported model (GPT-3.5, GPT-4, GPT-4o, Claude 3.x) and optionally enter custom system instructions—those settings are saved to `localStorage`.
+- The key never leaves your browser storage except for the request that proxies through the Netlify function, so it won’t be logged or persisted on the server.
+
+Need to rotate your own key? Clear all data in the settings menu and re-enter a fresh key (or just toggle the custom key switch off).
+
+## Privacy policy
+
+A policy page lives at `https://chat.uft1.com/privacy-policy.html` (also deployable via `public/privacy-policy.html`). It documents:
+
+- What data the Netlify function sees (messages, optional history, provider choice, timestamps).
+- How conversation history, drafts, and API preferences stay in `localStorage` only, and how you can clear them from settings.
+- That custom API keys are kept on-device and the proxy forwards requests securely to OpenAI/Anthropic without storing them.
+- Contact details (GitHub issues or https://jovylle.com) in case reviewers need clarification for Google Play.
+
 ## Android app (APK/AAB for Google Play)
 
 The app is a PWA; to publish on Google Play you need an Android package (AAB preferred, or APK). Easiest path:
