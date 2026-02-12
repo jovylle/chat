@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.uft1.chat.twa",
+      "sha256_cert_fingerprints": [
+        "09:D8:0D:88:FC:47:D5:7D:5A:F3:88:12:E8:E3:4E:9A:88:D5:87:C9:C2:E9:7E:4C:1E:25:F0:DD:DD:D7:0E:D4"
+      ]
+    }
+  }
+]
