@@ -2,7 +2,7 @@
   "packageId": "com.uft1.chat.twa",
   "host": "chat.uft1.com",
   "name": "Chat Assistant Box",
-  "launcherName": "CAB",
+  "launcherName": "Chat Assistant Box",
   "display": "fullscreen",
   "themeColor": "#0F0F0F",
   "themeColorDark": "#000000",
@@ -19,8 +19,8 @@
     "path": "/Users/jovyllebermudez/fore/lab/chat/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "1.1",
-  "appVersionCode": 2,
+  "appVersionName": "1.2",
+  "appVersionCode": 3,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://chat.uft1.com/manifest.webmanifest",
@@ -44,5 +44,5 @@
   "displayOverride": [
     "standalone"
   ],
-  "appVersion": "1.1"
+  "appVersion": "1.2"
 }
