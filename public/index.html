@@ -494,7 +494,7 @@
       display: flex;
       flex: 1;
       padding: 20px;
-      margin-bottom: calc(var(--input-offset, 96px) + 20px);
+      padding-bottom: calc(var(--input-offset, 96px) + 20px + env(safe-area-inset-bottom, 0px));
       overflow-y: auto;
       overflow-x: hidden;
       background: var(--bg-secondary);
@@ -840,6 +840,10 @@
     }
 
     .input-container {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: var(--keyboard-offset, 0px);
       display: flex;
       align-items: flex-start;
       padding: 16px 20px;
@@ -848,9 +852,9 @@
       border-top: 1px var(--border-style) var(--border-color);
       justify-content: center;
       gap: 12px;
-      position: sticky;
-      bottom: var(--keyboard-offset, 0px);
       z-index: 50;
+      transform: translateY(0);
+      transition: transform 0.3s ease, opacity 0.25s ease;
     }
     
     /* Light mode transparent input */
@@ -863,6 +867,12 @@
     .input-container.sending textarea {
       pointer-events: none;
       opacity: 0.7;
+    }
+
+    .input-container.hidden {
+      transform: translateY(calc(100% + env(safe-area-inset-bottom, 0px)));
+      opacity: 0;
+      pointer-events: none;
     }
 
     body.chat-loading .suggested-prompt {
@@ -1488,7 +1498,7 @@
       
       .chat-wrapper {
         padding: 12px;
-        margin-bottom: calc(var(--input-offset, 96px) + 12px);
+        padding-bottom: calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px));
       }
       
       .chat-messages {
@@ -1632,25 +1642,6 @@
       #user-input {
         font-size: 16px;
       }
-    }
-
-    .app-footer {
-      padding: 12px 16px;
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      background: var(--bg-secondary);
-      border-top: 1px solid var(--border-color);
-    }
-
-    .app-footer a {
-      color: var(--accent-color);
-      text-decoration: underline;
-    }
-
-    .app-footer span {
-      display: block;
-      line-height: 1.5;
     }
   </style>
 </head>
@@ -1827,16 +1818,6 @@
       </div>
     </div>
   </div>
-
-  <footer class="app-footer">
-    <span>
-      Privacy policy available at <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">chat.uft1.com/privacy-policy/</a>
-    </span>
-    <span>
-      Use the settings gear to toggle "Use Your Own API Key" whenever you want to run with your own OpenAI or Anthropic key.
-    </span>
-  </footer>
-
   <script>
     const STORAGE_KEY = 'quickgpt_conversations';
     const THEME_KEY = 'quickgpt_theme';
@@ -1896,6 +1877,8 @@
     let inputOffsetTimer = null;
     let activeSpeechUtterance = null;
     let activeSpeechButton = null;
+    let isInputHiddenForReading = false;
+    const CHAT_WRAPPER_HIDDEN_PADDING = 'calc(20px + env(safe-area-inset-bottom, 0px))';
 
     function updateKeyboardOffset() {
       if (!window.visualViewport) return;
@@ -1925,6 +1908,7 @@
       if (!inputContainer) return;
       const height = inputContainer.offsetHeight || 0;
       document.documentElement.style.setProperty('--input-offset', `${height}px`);
+      updateChatWrapperPadding();
     }
 
     function scheduleInputOffsetUpdate() {
@@ -1938,6 +1922,15 @@
     window.addEventListener('resize', scheduleInputOffsetUpdate);
     userInput.addEventListener('input', scheduleInputOffsetUpdate);
     scheduleInputOffsetUpdate();
+
+    function updateChatWrapperPadding() {
+      if (!chatWrapper) return;
+      if (isInputHiddenForReading) {
+        chatWrapper.style.paddingBottom = CHAT_WRAPPER_HIDDEN_PADDING;
+        return;
+      }
+      chatWrapper.style.paddingBottom = '';
+    }
 
     function resizeInput() {
       if (!userInput) return;
@@ -3217,6 +3210,13 @@
       const nearBottom = wrapper.scrollHeight - wrapper.scrollTop - wrapper.clientHeight < threshold;
       const hasMessages = activeConversationId && conversations[activeConversationId] && conversations[activeConversationId].messages.length > 0;
       scrollToBottomBtn.classList.toggle('visible', !nearBottom && hasMessages);
+      const shouldHideInput = inputContainer && !nearBottom && hasMessages;
+      if (inputContainer && shouldHideInput !== isInputHiddenForReading) {
+        isInputHiddenForReading = shouldHideInput;
+        inputContainer.classList.toggle('hidden', shouldHideInput);
+        updateInputOffset();
+        updateChatWrapperPadding();
+      }
     }
 
     // Legacy functions removed - using conversation management now

@@ -17,6 +17,7 @@ A fast, modern AI chat interface with markdown support, dark/light theme, Netlif
 - **Export & copy** – Download chat history (JSON/TXT/MD) and copy individual responses
 - **PWA-ready** – Manifest + service worker + install prompt keep the UI installable on mobile
 - **Keyboard-aware layout** – Input stays visible above the Android keyboard with soft scrolling tweaks
+- **Reading mode** – Input and action chrome temporarily hides while you scroll through history so previous replies get extra space; tap "New messages" to jump back and restore the input
 - **Accessibility** – ARIA labels, roles, keyboard support (Escape clears input)
 - **Retry toast** – “Retry” button surfaces automatically on rate limits (429)
 
