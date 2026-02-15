@@ -94,6 +94,17 @@ The app is a PWA; to publish on Google Play you need an Android package (AAB pre
 
 After deploying any manifest changes, re-run PWA Builder or Bubblewrap so the store package uses the updated PWA.
 
+## Capacitor shell (branch `capacitor-shell`)
+
+The `capacitor-shell` branch hosts a Capacitor WebView that loads the same `public/` UI without touching the Bubblewrap/TWA workflow.
+
+1. `npm install` (on `capacitor-shell`), then use `npm run cap:copy` or `npm run cap:sync` whenever you change anything inside `public/`.
+2. Build the Android shell with `npm run cap:android` or by running `./gradlew assembleRelease` inside the new `android/` folder that Capacitor created.
+3. Align/sign the release APK (e.g., `zipalign -v 4 android/app/build/outputs/apk/release/app-release-unsigned.apk android/app/build/outputs/apk/release/app-release-aligned.apk` followed by `apksigner` with the existing `android.keystore`).
+4. Install via `adb install -r android/app/build/outputs/apk/release/app-release-aligned.apk`. Because this shell hosts a WebView rather than relying on Chrome’s asset links, the “Running in Chrome” toast no longer appears even though Chrome is still the renderer.
+
+Keep the new branch’s documentation updated so contributors know to run `npm run cap:copy` before building and where to find the native assets.
+
 ## Project structure
 
 - `public/` – Static frontend (`index.html`, `prism.js`, `prism.css`)

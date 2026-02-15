@@ -22,6 +22,7 @@
   <noscript><link rel="stylesheet" href="prism.css"></noscript>
   
   <!-- Lazy load marked.js - will be loaded when first message is sent -->
+  <script src="env-config.js"></script>
   <script>
     // Lazy load marked.js when needed
     let markedLoaded = false;
@@ -1805,7 +1806,7 @@
       <!-- About -->
       <div class="settings-section">
         <h3>ℹ️ About</h3>
-        <p>Chat Assistant Box v2.0 - Fast, modern AI chat interface</p>
+        <p>Chat Assistant Box <span id="app-version-label"></span> - Fast, modern AI chat interface</p>
         <p style="font-size: var(--font-xs);">
           Learn more or contribute on <a href="https://github.com/jovylle/chat" style="color: var(--accent-color);" target="_blank" rel="noopener noreferrer">github.com/jovylle/chat</a>
         </p>
@@ -1826,9 +1827,14 @@
     const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
     const DRAFTS_KEY = 'quickgpt_drafts';
     const MAX_CHARS = 2000;
-    const APP_VERSION = '1.0.0-dev';
-    const APP_PATCH = 'patch-2';
+    const APP_VERSION = '1.0.1';
+    const APP_PATCH = 'patch-3';
+    const API_ROOT = window.__CHAT_API_ROOT__ || window.__CHAT_getApiRoot?.() || 'https://chat.uft1.com';
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+    const versionLabelEl = document.getElementById('app-version-label');
+    if (versionLabelEl) {
+      versionLabelEl.textContent = `v${APP_VERSION}${APP_PATCH ? ` (${APP_PATCH})` : ''}`;
+    }
     
     // Conversation management
     let conversations = {};
@@ -2496,7 +2502,7 @@
 
       requestBody.provider = apiConfig.provider;
       
-      fetch('/.netlify/functions/chat', {
+      fetch(`${API_ROOT}/.netlify/functions/chat`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: { 'Content-Type': 'application/json' },
@@ -2504,7 +2510,10 @@
       })
         .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
         .then(result => handleResponseResult(result, userMessage, loadingMessageId))
-        .catch(error => handleRequestError(error, loadingMessageId));
+        .catch(error => {
+          console.error(`Failed to send chat request to ${API_ROOT}/.netlify/functions/chat`, error);
+          handleRequestError(error, loadingMessageId);
+        });
     }
 
     async function sendViaCustomKey(userMessage, history, loadingMessageId) {
