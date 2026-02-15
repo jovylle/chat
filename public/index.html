@@ -63,6 +63,7 @@
       --shadow-light: 0 6px 20px rgba(15, 23, 42, 0.35);
       --shadow-medium: 0 10px 28px rgba(15, 23, 42, 0.45);
       --shadow-heavy: 0 16px 35px rgba(15, 23, 42, 0.55);
+      --chat-messages-padding-bottom: calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px));
       
       /* Typography scale - consistent font sizes */
       --font-xs: 0.75rem;    /* 12px */
@@ -495,7 +496,6 @@
       display: flex;
       flex: 1;
       padding: 20px;
-      padding-bottom: calc(var(--input-offset, 96px) + 20px + env(safe-area-inset-bottom, 0px));
       overflow-y: auto;
       overflow-x: hidden;
       background: var(--bg-secondary);
@@ -530,6 +530,11 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      padding: 0 20px var(--chat-messages-padding-bottom, calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px)));
+      box-sizing: border-box;
+    }
+    .chat-messages > :last-child {
+      padding-bottom: var(--chat-messages-padding-bottom, calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px)));
     }
 
     .message {
@@ -1499,7 +1504,6 @@
       
       .chat-wrapper {
         padding: 12px;
-        padding-bottom: calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px));
       }
       
       .chat-messages {
@@ -1827,14 +1831,16 @@
     const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
     const DRAFTS_KEY = 'quickgpt_drafts';
     const MAX_CHARS = 2000;
-    const APP_VERSION = '1.0.1';
-    const APP_PATCH = 'patch-3';
+    const APP_VERSION = '1.0.2';
+    const APP_PATCH = 'patch-4';
+    const APP_VERSION_LABEL = `v${APP_VERSION}${APP_PATCH ? ` (${APP_PATCH})` : ''}`;
     const API_ROOT = window.__CHAT_API_ROOT__ || window.__CHAT_getApiRoot?.() || 'https://chat.uft1.com';
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
     const versionLabelEl = document.getElementById('app-version-label');
     if (versionLabelEl) {
-      versionLabelEl.textContent = `v${APP_VERSION}${APP_PATCH ? ` (${APP_PATCH})` : ''}`;
+      versionLabelEl.textContent = APP_VERSION_LABEL;
     }
+    console.info('App version', APP_VERSION_LABEL);
     
     // Conversation management
     let conversations = {};
@@ -1930,12 +1936,30 @@
     scheduleInputOffsetUpdate();
 
     function updateChatWrapperPadding() {
-      if (!chatWrapper) return;
+      const height = inputContainer ? inputContainer.offsetHeight : 0;
+      const paddingBytes = height
+        ? `${height + 48}px`
+        : 'calc(var(--input-offset, 96px) + 48px)';
+      document.documentElement.style.setProperty('--chat-messages-padding-bottom', paddingBytes);
+      const inputOffsetValue = getComputedStyle(document.documentElement).getPropertyValue('--input-offset');
+      if (chatBox) {
+        chatBox.style.setProperty('--chat-messages-padding-bottom', paddingBytes);
+      }
+      const computedChatPadding = chatBox ? getComputedStyle(chatBox).paddingBottom : null;
+      const computedVar = getComputedStyle(document.documentElement).getPropertyValue('--chat-messages-padding-bottom');
+      console.log('updateChatWrapperPadding', {
+        height,
+        chatWrapperHeight: chatWrapper?.offsetHeight,
+        paddingBytes,
+        inputOffset: inputOffsetValue,
+        computedChatPadding,
+        computedVar
+      });
       if (isInputHiddenForReading) {
         chatWrapper.style.paddingBottom = CHAT_WRAPPER_HIDDEN_PADDING;
-        return;
+      } else {
+        chatWrapper.style.paddingBottom = '';
       }
-      chatWrapper.style.paddingBottom = '';
     }
 
     function resizeInput() {
@@ -3293,6 +3317,7 @@
     scrollToBottomBtn.addEventListener('click', () => { scrollToBottom(); scrollToBottomBtn.classList.remove('visible'); });
 
     userInput.addEventListener('keydown', function (e) {
+      scheduleInputOffsetUpdate();
       if (e.key === 'Enter' && !e.shiftKey) {
         const sendViaKeyboard = (e.ctrlKey || e.metaKey) || !isMobileDevice;
         if (sendViaKeyboard) {
