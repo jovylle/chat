@@ -1,6 +1,6 @@
 {
   "name": "chat",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "description": "Chat Assistant Box - Fast AI chat interface with markdown, export, and dark theme (Netlify + OpenAI)",
   "main": "index.js",
   "scripts": {

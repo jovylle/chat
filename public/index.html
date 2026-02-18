@@ -64,6 +64,7 @@
       --shadow-medium: 0 10px 28px rgba(15, 23, 42, 0.45);
       --shadow-heavy: 0 16px 35px rgba(15, 23, 42, 0.55);
       --chat-messages-padding-bottom: calc(var(--input-offset, 96px) + 12px + env(safe-area-inset-bottom, 0px));
+      --status-bar-padding: env(safe-area-inset-top, 24px);
       
       /* Typography scale - consistent font sizes */
       --font-xs: 0.75rem;    /* 12px */
@@ -121,6 +122,7 @@
     .app-container {
       display: flex;
       min-height: 100vh;
+      padding-top: var(--status-bar-padding);
     }
 
     .sidebar {
@@ -1831,8 +1833,8 @@
     const SIDEBAR_STATE_KEY = 'quickgpt_sidebar_collapsed';
     const DRAFTS_KEY = 'quickgpt_drafts';
     const MAX_CHARS = 2000;
-    const APP_VERSION = '1.0.2';
-    const APP_PATCH = 'patch-4';
+    const APP_VERSION = '1.3';
+    const APP_PATCH = '';
     const APP_VERSION_LABEL = `v${APP_VERSION}${APP_PATCH ? ` (${APP_PATCH})` : ''}`;
     const API_ROOT = window.__CHAT_API_ROOT__ || window.__CHAT_getApiRoot?.() || 'https://chat.uft1.com';
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');

@@ -94,16 +94,16 @@ The app is a PWA; to publish on Google Play you need an Android package (AAB pre
 
 After deploying any manifest changes, re-run PWA Builder or Bubblewrap so the store package uses the updated PWA.
 
-## Capacitor shell (branch `capacitor-shell`)
+## Capacitor shell (branch `capacitor-shell`) — **not TWA**
 
-The `capacitor-shell` branch hosts a Capacitor WebView that loads the same `public/` UI without touching the Bubblewrap/TWA workflow.
+The `capacitor-shell` branch hosts a **Capacitor WebView** that loads the same `public/` UI. **This is not a TWA** (Trusted Web Activity): it is a native shell with an embedded WebView, not a Chrome custom tab wrapping the PWA. Releases built from this branch (e.g. AAB/APK in `releases/`) are Capacitor builds, not PWA Builder or Bubblewrap TWA builds.
 
 1. `npm install` (on `capacitor-shell`), then use `npm run cap:copy` or `npm run cap:sync` whenever you change anything inside `public/`.
 2. Build the Android shell with `npm run cap:android` or by running `./gradlew assembleRelease` inside the new `android/` folder that Capacitor created.
 3. Align/sign the release APK (e.g., `zipalign -v 4 android/app/build/outputs/apk/release/app-release-unsigned.apk android/app/build/outputs/apk/release/app-release-aligned.apk` followed by `apksigner` with the existing `android.keystore`).
 4. Install via `adb install -r android/app/build/outputs/apk/release/app-release-aligned.apk`. Because this shell hosts a WebView rather than relying on Chrome’s asset links, the “Running in Chrome” toast no longer appears even though Chrome is still the renderer.
 
-Keep the new branch’s documentation updated so contributors know to run `npm run cap:copy` before building and where to find the native assets.
+Keep the new branch’s documentation updated so contributors know to run `npm run cap:copy` before building and where to find the native assets. When publishing a new release, bump `versionCode` and `versionName` in `android/app/build.gradle` and the `version` in `package.json`, then build and sign the AAB/APK; put the signed bundle in `releases/` and note in `releases/README.md` that it is a **Capacitor (non-TWA)** build.
 
 ## Project structure
 
