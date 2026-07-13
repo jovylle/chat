@@ -20,15 +20,20 @@
   },
 
   // D1 database (Phase 2+: accounts, conversations, messages, attachments).
-  // Create it with `wrangler d1 create chat-assistant-box` and paste the
-  // returned database_id below. Local `wrangler dev` uses a local SQLite file
-  // regardless of this id; only remote deploys need the real one.
+  // SHARED multi-project database: this one D1 instance is co-inhabited by
+  // several projects (chat, projectmate, …). Chat namespaces every table and
+  // index with a `chat_` prefix and tracks its own migrations in a dedicated
+  // `d1_migrations_chat` table, so other projects can point their own binding
+  // at the same DB (each with its own prefix + migrations_table) without
+  // collisions. Local `wrangler dev` uses a local SQLite file regardless of
+  // this id; only remote deploys need the real one.
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "chat-assistant-box",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
+      "database_name": "projectmate-issues",
+      "database_id": "a67d6b89-0476-499d-913d-4c3eb9706e40",
+      "migrations_dir": "migrations",
+      "migrations_table": "d1_migrations_chat"
     }
   ]
 

@@ -33,7 +33,7 @@ async function startSession(env, userId) {
   const tokenHash = await hashToken(token);
   const ts = now();
   await env.DB.prepare(
-    'INSERT INTO sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)'
+    'INSERT INTO chat_sessions (token_hash, user_id, created_at, expires_at) VALUES (?, ?, ?, ?)'
   ).bind(tokenHash, userId, ts, ts + SESSION_MAX_AGE_MS).run();
   return sessionCookie(token);
 }
@@ -49,7 +49,7 @@ async function register(request, env) {
   if (invalid) return json(400, { error: invalid });
 
   const existing = await env.DB.prepare(
-    'SELECT id FROM users WHERE username = ? COLLATE NOCASE'
+    'SELECT id FROM chat_users WHERE username = ? COLLATE NOCASE'
   ).bind(username).first();
   if (existing) return json(409, { error: 'That username is already taken.' });
 
@@ -57,7 +57,7 @@ async function register(request, env) {
   const id = newId();
   try {
     await env.DB.prepare(
-      'INSERT INTO users (id, username, password_hash, password_salt, email, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO chat_users (id, username, password_hash, password_salt, email, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(id, username, hash, salt, email, now()).run();
   } catch (e) {
     // UNIQUE race → treat as dup.
@@ -77,7 +77,7 @@ async function login(request, env) {
   if (!username || !password) return json(400, { error: 'Username and password are required.' });
 
   const user = await env.DB.prepare(
-    'SELECT id, username, password_hash, password_salt, email FROM users WHERE username = ? COLLATE NOCASE'
+    'SELECT id, username, password_hash, password_salt, email FROM chat_users WHERE username = ? COLLATE NOCASE'
   ).bind(username).first();
 
   // Generic message either way (don't reveal whether the username exists).
@@ -92,7 +92,7 @@ async function logout(request, env) {
   const token = parseCookies(request)[SESSION_COOKIE];
   if (token) {
     const tokenHash = await hashToken(token);
-    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
+    await env.DB.prepare('DELETE FROM chat_sessions WHERE token_hash = ?').bind(tokenHash).run();
   }
   return json(200, { ok: true }, { 'Set-Cookie': clearSessionCookie() });
 }

@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate:local": "wrangler d1 migrations apply chat-assistant-box --local",
-    "db:migrate:remote": "wrangler d1 migrations apply chat-assistant-box --remote",
+    "db:migrate:local": "wrangler d1 migrations apply projectmate-issues --local",
+    "db:migrate:remote": "wrangler d1 migrations apply projectmate-issues --remote",
     "test": "vitest run"
   },
   "repository": {

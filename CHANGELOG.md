@@ -38,8 +38,16 @@ follows [Keep a Changelog](https://keepachangelog.com/) and
 - **Generous input guard** on the Worker (rejects absurdly large payloads).
 - New docs: `AGENTS.md` (renamed from `agents.md`, refreshed), `README.md` refresh,
   `CONTRIBUTING.md`, and this `CHANGELOG.md`.
+- **Shared multi-project D1 database.** Chat now runs on one shared D1 instance
+  (`projectmate-issues`, binding `DB`) co-inhabited by other projects. Every chat table
+  and index is namespaced `chat_` (`chat_users`, `chat_sessions`, `chat_conversations`,
+  `chat_messages`, `idx_chat_*`) and chat tracks migrations independently via
+  `migrations_table: d1_migrations_chat`, so projects coexist without collisions.
 
 ### Changed
+- **DB tables renamed with a `chat_` prefix** for the shared-DB convention (see Added);
+  `wrangler.jsonc` D1 binding points at `projectmate-issues` with
+  `migrations_table: d1_migrations_chat`.
 - Backend rewritten as a dependency-free Worker: plain `fetch` to each provider with the
   **upstream OpenAI-format SSE passed through unchanged** (via `ReadableStream.tee()`),
   replacing the `openai` SDK and the old `{delta}` re-emit protocol. The frontend now
@@ -61,6 +69,10 @@ follows [Keep a Changelog](https://keepachangelog.com/) and
 - Dead `groq` dropdown option and legacy `gpt-3.5-turbo*` models.
 
 ### Fixed
+- **Registration/login failed in production** with `NotSupportedError: Pbkdf2 failed:
+  iteration counts above 100000 are not supported`. Lowered PBKDF2 iterations from 150000
+  to the runtime maximum of 100000 (`worker/db.js`); `wrangler dev` allowed the higher
+  count so this only surfaced on deploy.
 - Corrected the Android package ID in docs to `com.uft1.chat.twa`.
 
 ## [1.2] — Android release

@@ -19,6 +19,12 @@ real provider APIs and a **local** D1 SQLite. Apply DB migrations locally first:
 npm run db:migrate:local
 ```
 
+> **Shared D1 database.** Chat co-inhabits one shared D1 instance (`projectmate-issues`,
+> binding `DB`) with other projects. Every chat table and index is prefixed `chat_`
+> (`chat_users`, `chat_sessions`, `chat_conversations`, `chat_messages`, `idx_chat_*`), and
+> chat tracks its own migrations via `migrations_table: d1_migrations_chat` in
+> `wrangler.jsonc`. Prefix any new table **and** index; FKs reference only `chat_*` tables.
+
 The test harness uses `vitest` (`npm test`); auth/hashing and D1 CRUD are the units
 worth covering since auth is security-sensitive. Also verify changes manually in
 `wrangler dev`: send a message on each model, confirm tokens stream in, Stop cancels

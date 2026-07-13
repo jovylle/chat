@@ -20,7 +20,10 @@ function randomBytes(n) {
 // --- password hashing: PBKDF2-HMAC-SHA256 (Workers-native) ------------------
 // bcrypt/argon2 are unavailable in Workers; PBKDF2 via WebCrypto is the
 // supported path. Per-user 16-byte salt; SESSION_SECRET acts as a pepper.
-const PBKDF2_ITERATIONS = 150000;
+// NOTE: the production Workers runtime caps PBKDF2 at 100000 iterations
+// (>100000 throws NotSupportedError, even though local `wrangler dev` allows
+// more), so this is pinned to the platform maximum.
+const PBKDF2_ITERATIONS = 100000;
 const PBKDF2_KEYLEN_BITS = 256;
 
 async function pbkdf2(password, saltBytes, pepper) {
@@ -104,14 +107,14 @@ export async function getSessionUser(request, env) {
   const tokenHash = await hashToken(token);
   const row = await env.DB.prepare(
     `SELECT u.id AS id, u.username AS username, u.email AS email, s.expires_at AS expires_at
-       FROM sessions s JOIN users u ON u.id = s.user_id
+       FROM chat_sessions s JOIN chat_users u ON u.id = s.user_id
       WHERE s.token_hash = ?`
   ).bind(tokenHash).first();
 
   if (!row) return null;
   if (row.expires_at <= now()) {
     // Expired: clean it up, treat as logged out.
-    await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(tokenHash).run();
+    await env.DB.prepare('DELETE FROM chat_sessions WHERE token_hash = ?').bind(tokenHash).run();
     return null;
   }
   return { id: row.id, username: row.username, email: row.email };

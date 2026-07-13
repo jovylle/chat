@@ -32,7 +32,7 @@ function rowToConversation(row, messages) {
 async function listConversations(env, userId) {
   const { results } = await env.DB.prepare(
     `SELECT id, title, model, pinned, token_count, created_at, updated_at
-       FROM conversations WHERE user_id = ?
+       FROM chat_conversations WHERE user_id = ?
       ORDER BY pinned DESC, updated_at DESC`
   ).bind(userId).all();
   return json(200, { conversations: (results || []).map((r) => rowToConversation(r)) });
@@ -41,12 +41,12 @@ async function listConversations(env, userId) {
 async function getConversation(env, userId, id) {
   const row = await env.DB.prepare(
     `SELECT id, title, model, pinned, token_count, created_at, updated_at
-       FROM conversations WHERE id = ? AND user_id = ?`
+       FROM chat_conversations WHERE id = ? AND user_id = ?`
   ).bind(id, userId).first();
   if (!row) return json(404, { error: 'Not found' });
 
   const { results } = await env.DB.prepare(
-    'SELECT role, content FROM messages WHERE conversation_id = ? ORDER BY created_at, id'
+    'SELECT role, content FROM chat_messages WHERE conversation_id = ? ORDER BY created_at, id'
   ).bind(id).all();
   const messages = (results || []).map((m) => ({ role: m.role, content: m.content }));
   return json(200, { conversation: rowToConversation(row, messages) });
@@ -58,19 +58,19 @@ async function createConversation(env, userId, body) {
   // Idempotent by id: the client may create locally then mirror while a chat
   // request for the same id is already in flight (which upserts server-side).
   await env.DB.prepare(
-    `INSERT INTO conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
+    `INSERT INTO chat_conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
      VALUES (?, ?, ?, ?, 0, 0, ?, ?)
      ON CONFLICT(id) DO NOTHING`
   ).bind(id, userId, body.title || 'New Chat', body.model || null, ts, ts).run();
   const row = await env.DB.prepare(
-    'SELECT id, title, model, pinned, token_count, created_at, updated_at FROM conversations WHERE id = ?'
+    'SELECT id, title, model, pinned, token_count, created_at, updated_at FROM chat_conversations WHERE id = ?'
   ).bind(id).first();
   return json(201, { conversation: rowToConversation(row, []) });
 }
 
 async function patchConversation(env, userId, id, body) {
   const owned = await env.DB.prepare(
-    'SELECT id FROM conversations WHERE id = ? AND user_id = ?'
+    'SELECT id FROM chat_conversations WHERE id = ? AND user_id = ?'
   ).bind(id, userId).first();
   if (!owned) return json(404, { error: 'Not found' });
 
@@ -84,14 +84,14 @@ async function patchConversation(env, userId, id, body) {
   vals.push(id, userId);
 
   await env.DB.prepare(
-    `UPDATE conversations SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`
+    `UPDATE chat_conversations SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`
   ).bind(...vals).run();
   return json(200, { ok: true });
 }
 
 async function deleteConversation(env, userId, id) {
   const res = await env.DB.prepare(
-    'DELETE FROM conversations WHERE id = ? AND user_id = ?'
+    'DELETE FROM chat_conversations WHERE id = ? AND user_id = ?'
   ).bind(id, userId).run();
   if (!res.meta.changes) return json(404, { error: 'Not found' });
   return json(200, { ok: true });
@@ -100,7 +100,7 @@ async function deleteConversation(env, userId, id) {
 // Recompute token_count from all rows (matches client's ceil(len/4) per msg).
 async function recomputeTokens(env, conversationId) {
   const row = await env.DB.prepare(
-    'SELECT COALESCE(SUM((length(content) + 3) / 4), 0) AS tokens FROM messages WHERE conversation_id = ?'
+    'SELECT COALESCE(SUM((length(content) + 3) / 4), 0) AS tokens FROM chat_messages WHERE conversation_id = ?'
   ).bind(conversationId).first();
   return row?.tokens || 0;
 }
@@ -111,38 +111,38 @@ async function recomputeTokens(env, conversationId) {
 export async function persistChatTurn(env, userId, { conversationId, userMessage, assistantText, model }) {
   if (!conversationId) return; // guest-style request from a logged-in tab: skip.
   let convo = await env.DB.prepare(
-    'SELECT id, title FROM conversations WHERE id = ? AND user_id = ?'
+    'SELECT id, title FROM chat_conversations WHERE id = ? AND user_id = ?'
   ).bind(conversationId, userId).first();
   if (!convo) {
     // Race: chat arrived before the client mirrored the new conversation.
     // Upsert it now (owned by the authenticated user) rather than dropping the turn.
     const ts = now();
     await env.DB.prepare(
-      `INSERT INTO conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
+      `INSERT INTO chat_conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
        VALUES (?, ?, 'New Chat', ?, 0, 0, ?, ?)
        ON CONFLICT(id) DO NOTHING`
     ).bind(conversationId, userId, model || null, ts, ts).run();
     convo = await env.DB.prepare(
-      'SELECT id, title FROM conversations WHERE id = ? AND user_id = ?'
+      'SELECT id, title FROM chat_conversations WHERE id = ? AND user_id = ?'
     ).bind(conversationId, userId).first();
     if (!convo) return; // id exists but owned by someone else → refuse
   }
 
   const existing = await env.DB.prepare(
-    'SELECT COUNT(*) AS n FROM messages WHERE conversation_id = ?'
+    'SELECT COUNT(*) AS n FROM chat_messages WHERE conversation_id = ?'
   ).bind(conversationId).first();
   const isFirst = (existing?.n || 0) === 0;
 
   const ts = now();
   const stmts = [
     env.DB.prepare(
-      'INSERT INTO messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO chat_messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(newId(), conversationId, 'user', userMessage, model || null, ts),
   ];
   if (assistantText) {
     stmts.push(
       env.DB.prepare(
-        'INSERT INTO messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO chat_messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(newId(), conversationId, 'assistant', assistantText, model || null, ts + 1)
     );
   }
@@ -151,7 +151,7 @@ export async function persistChatTurn(env, userId, { conversationId, userMessage
   const tokens = await recomputeTokens(env, conversationId);
   const title = isFirst ? generateTitle(userMessage) : convo.title;
   await env.DB.prepare(
-    'UPDATE conversations SET title = ?, token_count = ?, updated_at = ? WHERE id = ?'
+    'UPDATE chat_conversations SET title = ?, token_count = ?, updated_at = ? WHERE id = ?'
   ).bind(title, tokens, now(), conversationId).run();
 }
 
@@ -170,7 +170,7 @@ async function importBundle(env, userId, body) {
 
   // Imported wins: wipe any existing rows for these ids (messages cascade).
   for (const id of ids) {
-    push(env.DB.prepare('DELETE FROM conversations WHERE id = ? AND user_id = ?').bind(id, userId));
+    push(env.DB.prepare('DELETE FROM chat_conversations WHERE id = ? AND user_id = ?').bind(id, userId));
   }
 
   for (const c of entries) {
@@ -181,14 +181,14 @@ async function importBundle(env, userId, body) {
       ? c.tokenCount
       : messages.reduce((n, m) => n + estimateTokens(m.content), 0);
     push(env.DB.prepare(
-      `INSERT INTO conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
+      `INSERT INTO chat_conversations (id, user_id, title, model, pinned, token_count, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).bind(c.id, userId, c.title || 'New Chat', c.model || null, c.pinned ? 1 : 0, tokenCount, created, updated));
 
     messages.forEach((m, i) => {
       if (!m || typeof m.content !== 'string') return;
       push(env.DB.prepare(
-        'INSERT INTO messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO chat_messages (id, conversation_id, role, content, model, created_at) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(newId(), c.id, m.role === 'assistant' ? 'assistant' : 'user', m.content, c.model || null, created + i));
     });
   }

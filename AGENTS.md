@@ -30,7 +30,7 @@ logic is inlined in `public/index.html` (~3,500 lines). Only the **Worker** is b
 | Icons | Font Awesome 6.5 (CDN, loaded non-blocking) |
 | Backend | Cloudflare Worker (ES modules, `worker/`), **zero runtime deps** |
 | AI providers | Plain `fetch` to each provider's OpenAI-compatible `/chat/completions` |
-| Database | Cloudflare **D1** (SQLite) — binding `DB` (accounts, conversations, messages) |
+| Database | Cloudflare **D1** (SQLite) — binding `DB`, **shared** DB `projectmate-issues`; chat's tables are `chat_*` (accounts, conversations, messages) |
 | Object storage | Cloudflare **R2** — binding `ATTACHMENTS` (image/file attachments, Phase 4) |
 | Hosting | Cloudflare Workers + **Static Assets** (one Worker serves app + API) |
 | Mobile | PWA → Android TWA via PWA Builder / Bubblewrap |
@@ -149,8 +149,29 @@ npm run dev            # wrangler dev — serves app + API at localhost:8787
 migrations locally before testing DB features:
 
 ```bash
-npm run db:migrate:local     # wrangler d1 migrations apply chat-assistant-box --local
+npm run db:migrate:local     # wrangler d1 migrations apply projectmate-issues --local
 ```
+
+---
+
+## Shared D1 database (multi-project convention)
+
+Chat does **not** own its own D1 database. It co-inhabits one **shared** D1 instance
+(`projectmate-issues`, binding `DB`) alongside other projects (projectmate, …). To keep
+projects from colliding in the same database:
+
+- **Table + index prefix per project.** Chat prefixes *every* table and *every* index with
+  `chat_` (`chat_users`, `chat_sessions`, `chat_conversations`, `chat_messages`;
+  `idx_chat_*`). SQLite index names are global per-database, so indexes must be prefixed
+  too — not just tables. (Phase 4's attachments table will be `chat_attachments`.)
+- **Separate migration bookkeeping.** Chat's d1 binding sets
+  `"migrations_table": "d1_migrations_chat"` in `wrangler.jsonc`, so
+  `wrangler d1 migrations apply` tracks chat's migrations independently of any other
+  project's `d1_migrations` in the same DB.
+- **Foreign keys reference only same-project tables.**
+
+Another project can point its own `DB` binding at `projectmate-issues` with its own prefix
+and its own `migrations_table` without touching chat's rows.
 
 ---
 
@@ -242,10 +263,9 @@ Deploy the Worker (static assets upload automatically):
 
 ```bash
 npm run deploy            # wrangler deploy
-# first time only:
-wrangler d1 create chat-assistant-box   # paste database_id into wrangler.jsonc
+# first time only (shared DB already exists — do NOT create a new one):
 wrangler secret put MY_OPENAI_API       # repeat for each secret above
-npm run db:migrate:remote               # apply migrations to prod D1
+npm run db:migrate:remote               # apply chat's migrations into the shared prod D1
 ```
 
 **Custom domain / DNS cutover:** add `chat.uft1.com` as a Worker Custom Domain (or a
@@ -279,8 +299,12 @@ The PWA is packaged as an Android **TWA** (AAB) using PWA Builder or Bubblewrap.
 - Only the **Worker** is bundled (wrangler/esbuild). Keep it dependency-free.
 - Main app logic is **inside `index.html`**, not `script.js`.
 - Keep the frontend and backend `MODELS` registries in sync.
-- **D1:** prepared statements only; INTEGER for bool/time; add indexes; `ON DELETE
-  CASCADE`; binary → R2 never D1 (1 MB row limit); apply migrations `--remote` for prod.
+- **D1:** shared multi-project DB — prefix **every** table and index with `chat_`; use
+  `migrations_table: d1_migrations_chat`; prepared statements only; INTEGER for bool/time;
+  add indexes; `ON DELETE CASCADE`; binary → R2 never D1 (1 MB row limit); apply migrations
+  `--remote` for prod.
+- **PBKDF2:** the production Workers runtime caps iterations at **100000** (>100000 throws
+  `NotSupportedError` even though `wrangler dev` allows more) — see `worker/db.js`.
 - **Passwords:** PBKDF2-HMAC-SHA256 via WebCrypto only (no bcrypt/argon2 in Workers).
 - **Cookies:** session cookie is HttpOnly + Secure + SameSite=Lax; store the token
   **hash**, not the token.
