@@ -1324,6 +1324,23 @@
       color: var(--text-primary);
     }
 
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      background: none;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: var(--font-sm);
+      transition: background 0.2s, color 0.2s;
+    }
+    .auth-tab.active {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #fff;
+    }
+
     .settings-close {
       background: none;
       border: none;
@@ -1683,6 +1700,7 @@
           </select>
         </div>
         <div class="header-actions">
+          <button class="theme-toggle" id="account-btn" title="Account" aria-label="Account" style="background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: var(--icon-base); padding: 10px 14px; border-radius: 8px; transition: background 0.2s;"><i class="fa-solid fa-circle-user"></i><span id="account-username" style="font-size: var(--font-sm); margin-left: 6px;"></span></button>
           <button class="theme-toggle" id="settings-btn" title="Settings" aria-label="Settings" style="background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: var(--icon-base); padding: 10px 14px; border-radius: 8px; transition: background 0.2s;"><i class="fa-solid fa-gear"></i></button>
           <button class="theme-toggle" id="theme-toggle" title="Toggle light/dark" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
           <!-- Export dropdown removed from header; use settings modal instead -->
@@ -1795,6 +1813,47 @@
         <p style="font-size: var(--font-xs);">
           Enable "Use Your Own API Key" in the settings to keep your provider credentials on-device while still powering the chat interface.
         </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Modal (login / register / guest) -->
+  <div class="settings-modal" id="auth-modal">
+    <div class="settings-content" style="max-width: 420px;">
+      <div class="settings-header">
+        <h2 id="auth-title">Account</h2>
+        <button class="settings-close" id="auth-close">×</button>
+      </div>
+      <!-- Logged-out view -->
+      <div id="auth-forms">
+        <p style="color: var(--text-secondary); font-size: var(--font-sm); margin-top: 0;">
+          Sign in to sync your conversations across devices. Your chats stay on this
+          device in <strong>guest mode</strong> — signing in is optional.
+        </p>
+        <div class="auth-tabs" style="display:flex; gap:8px; margin:16px 0;">
+          <button type="button" class="auth-tab active" id="auth-tab-login">Log in</button>
+          <button type="button" class="auth-tab" id="auth-tab-register">Register</button>
+        </div>
+        <form id="auth-form" autocomplete="on">
+          <input type="text" id="auth-username" placeholder="Username" autocomplete="username"
+            style="width:100%; padding:10px 12px; margin-bottom:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);" />
+          <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password"
+            style="width:100%; padding:10px 12px; margin-bottom:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary);" />
+          <input type="email" id="auth-email" placeholder="Email (optional)" autocomplete="email"
+            style="width:100%; padding:10px 12px; margin-bottom:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-primary); color:var(--text-primary); display:none;" />
+          <button type="submit" id="auth-submit"
+            style="width:100%; padding:11px; border:none; border-radius:8px; background:var(--accent-color); color:#fff; font-weight:600; cursor:pointer;">Log in</button>
+        </form>
+        <button type="button" id="auth-guest"
+          style="width:100%; padding:10px; margin-top:10px; background:none; border:1px solid var(--border-color); border-radius:8px; color:var(--text-secondary); cursor:pointer;">Continue as guest</button>
+      </div>
+      <!-- Logged-in view -->
+      <div id="auth-account" style="display:none;">
+        <p style="color: var(--text-secondary); font-size: var(--font-sm); margin-top:0;">
+          Signed in as <strong id="auth-account-name"></strong>. Conversations sync to your account.
+        </p>
+        <button type="button" id="auth-logout"
+          style="width:100%; padding:11px; margin-top:12px; border:1px solid var(--border-color); border-radius:8px; background:none; color:var(--text-primary); cursor:pointer;">Log out</button>
       </div>
     </div>
   </div>
@@ -2077,7 +2136,7 @@
 
     async function fetchModelAvailability() {
       try {
-        const res = await fetch('/.netlify/functions/chat', { method: 'GET' });
+        const res = await fetch('/api/models', { method: 'GET' });
         if (!res.ok) return;
         const data = await res.json();
         if (data && data.providers) applyModelAvailability(data.providers);
@@ -2327,6 +2386,7 @@
         tokenCount: 0,
         pinned: false
       };
+      ConversationStore.mirrorCreate(conversations[id]);
       return id;
     }
 
@@ -2334,7 +2394,7 @@
       if (!conversations[conversationId]) return;
       
       activeConversationId = conversationId;
-      localStorage.setItem(ACTIVE_CONVO_KEY, conversationId);
+      localStorage.setItem(activeConvoKey(), conversationId);
       
       // Clear current chat
       chatBox.innerHTML = '';
@@ -2368,6 +2428,7 @@
       if (!confirm('Delete this conversation? This cannot be undone.')) return;
       
       delete conversations[conversationId];
+      ConversationStore.mirrorDelete(conversationId);
       if (drafts[conversationId]) {
         delete drafts[conversationId];
         saveDrafts();
@@ -2395,6 +2456,7 @@
       if (!newTitle) return;
       convo.title = newTitle.trim().slice(0, 60) || convo.title;
       convo.updated = Date.now();
+      ConversationStore.mirrorPatch(conversationId, { title: convo.title });
       saveAllConversations();
       renderConversationList();
     }
@@ -2404,13 +2466,27 @@
       if (!convo) return;
       convo.pinned = !convo.pinned;
       convo.updated = Date.now();
+      ConversationStore.mirrorPatch(conversationId, { pinned: convo.pinned });
       saveAllConversations();
       renderConversationList();
     }
 
+    // Conversation storage is namespaced per identity: guest uses the base key;
+    // a logged-in user gets their own cache (STORAGE_KEY::<userId>). This keeps
+    // guest chats intact across login/logout and makes the local store a
+    // per-user offline cache (server is source of truth when logged in).
+    function convStorageKey() {
+      return (typeof authState !== 'undefined' && authState.user)
+        ? STORAGE_KEY + '::' + authState.user.id : STORAGE_KEY;
+    }
+    function activeConvoKey() {
+      return (typeof authState !== 'undefined' && authState.user)
+        ? ACTIVE_CONVO_KEY + '::' + authState.user.id : ACTIVE_CONVO_KEY;
+    }
+
     function saveAllConversations() {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
+        localStorage.setItem(convStorageKey(), JSON.stringify(conversations));
       } catch (e) {
         console.error('Failed to save conversations:', e);
       }
@@ -2418,15 +2494,15 @@
 
     function loadAllConversations() {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const stored = localStorage.getItem(convStorageKey());
         if (stored) {
           conversations = JSON.parse(stored);
           Object.values(conversations).forEach(convo => {
             if (typeof convo.pinned !== 'boolean') convo.pinned = false;
           });
-          
+
           // Load active conversation
-          const activeId = localStorage.getItem(ACTIVE_CONVO_KEY);
+          const activeId = localStorage.getItem(activeConvoKey());
           if (activeId && conversations[activeId]) {
             activeConversationId = activeId;
           } else if (Object.keys(conversations).length > 0) {
@@ -2434,8 +2510,10 @@
           }
         }
         
-        // Create first conversation if none exist
-        if (Object.keys(conversations).length === 0) {
+        // Create first conversation if none exist. Suppressed during login
+        // reload — pullAll() populates from the server (and creates one only if
+        // the account has none), avoiding a stray empty "New Chat" per login.
+        if (!suppressAutoCreate && Object.keys(conversations).length === 0) {
           const id = createConversation();
           activeConversationId = id;
         }
@@ -2560,12 +2638,9 @@
       }
     }
 
-    // Proxy path: our Netlify function re-emits {"delta":"..."} / {"error":"..."} SSE.
-    function parseProxyStreamEvent(data) {
-      const parsed = JSON.parse(data);
-      return { delta: parsed.delta || '', error: parsed.error || null };
-    }
-    // Custom-key path: raw OpenAI-compatible SSE straight from the provider.
+    // Both paths now stream raw OpenAI-compatible SSE: the custom-key path comes
+    // straight from the provider, and the proxy Worker passes the upstream SSE
+    // through unchanged. One parser handles both.
     function parseOpenAIStreamEvent(data) {
       const parsed = JSON.parse(data);
       return {
@@ -2588,11 +2663,14 @@
         history: history,
         model: apiConfig.model,
         systemPrompt: apiConfig.systemPrompt,
-        provider: apiConfig.provider
+        provider: apiConfig.provider,
+        // Logged-in users: the Worker persists this turn to the conversation.
+        // Ignored server-side for guests (no persist hook).
+        conversationId: activeConversationId
       };
 
       try {
-        const response = await fetch('/.netlify/functions/chat', {
+        const response = await fetch('/api/chat', {
           method: 'POST',
           body: JSON.stringify(requestBody),
           headers: { 'Content-Type': 'application/json' },
@@ -2605,7 +2683,7 @@
           return;
         }
 
-        await streamAssistantResponse({ response, userMessage, loadingMessageId, parseEvent: parseProxyStreamEvent });
+        await streamAssistantResponse({ response, userMessage, loadingMessageId, parseEvent: parseOpenAIStreamEvent });
       } catch (error) {
         handleRequestError(error, loadingMessageId);
       }
@@ -3530,6 +3608,204 @@
     // Initialize
     populateAllModelSelects();
     loadApiConfig();
+    // --- Accounts + server sync (Phases 2–3) --------------------------------
+    // All of this runs AFTER the instant-focus init below; nothing here blocks
+    // first paint or input. Guest mode is fully functional with no account.
+    const authState = { user: null };
+    let suppressAutoCreate = false;
+
+    const accountBtn = document.getElementById('account-btn');
+    const accountUsername = document.getElementById('account-username');
+    const authModal = document.getElementById('auth-modal');
+    const authClose = document.getElementById('auth-close');
+    const authForms = document.getElementById('auth-forms');
+    const authAccount = document.getElementById('auth-account');
+    const authAccountName = document.getElementById('auth-account-name');
+    const authTabLogin = document.getElementById('auth-tab-login');
+    const authTabRegister = document.getElementById('auth-tab-register');
+    const authForm = document.getElementById('auth-form');
+    const authUsername = document.getElementById('auth-username');
+    const authPassword = document.getElementById('auth-password');
+    const authEmail = document.getElementById('auth-email');
+    const authSubmit = document.getElementById('auth-submit');
+    const authGuest = document.getElementById('auth-guest');
+    const authLogout = document.getElementById('auth-logout');
+    let authMode = 'login';
+
+    async function api(method, path, body) {
+      try {
+        const opts = { method, headers: {}, credentials: 'same-origin' };
+        if (body !== undefined) {
+          opts.headers['Content-Type'] = 'application/json';
+          opts.body = JSON.stringify(body);
+        }
+        const res = await fetch(path, opts);
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok, status: res.status, data };
+      } catch (e) {
+        return { ok: false, status: 0, data: {} };
+      }
+    }
+
+    function updateAccountButton() {
+      if (accountUsername) accountUsername.textContent = authState.user ? authState.user.username : '';
+    }
+    function updateAuthModalView() {
+      const inn = !!authState.user;
+      if (authForms) authForms.style.display = inn ? 'none' : 'block';
+      if (authAccount) authAccount.style.display = inn ? 'block' : 'none';
+      if (inn && authAccountName) authAccountName.textContent = authState.user.username;
+    }
+    function setAuthMode(mode) {
+      authMode = mode;
+      authTabLogin.classList.toggle('active', mode === 'login');
+      authTabRegister.classList.toggle('active', mode === 'register');
+      authEmail.style.display = mode === 'register' ? 'block' : 'none';
+      authSubmit.textContent = mode === 'register' ? 'Register' : 'Log in';
+      authPassword.setAttribute('autocomplete', mode === 'register' ? 'new-password' : 'current-password');
+    }
+    function openAuthModal() {
+      updateAuthModalView();
+      authModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (!authState.user) setTimeout(() => authUsername.focus(), 50);
+    }
+    function closeAuthModal() {
+      authModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Reset the in-memory store and reload from the current identity's cache.
+    function reloadConversations() {
+      conversations = {};
+      activeConversationId = null;
+      chatBox.innerHTML = '';
+      loadAllConversations();
+    }
+
+    // Offer to import guest chats into the account (once per user).
+    async function maybeOfferImport() {
+      if (!authState.user) return;
+      const offeredKey = 'quickgpt_import_offered::' + authState.user.id;
+      if (localStorage.getItem(offeredKey)) return;
+      localStorage.setItem(offeredKey, '1');
+      let guest = {};
+      try { guest = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch {}
+      const withMessages = Object.values(guest).filter(c => c && Array.isArray(c.messages) && c.messages.length);
+      if (!withMessages.length) return;
+      if (!confirm(`Import your ${withMessages.length} local chat${withMessages.length > 1 ? 's' : ''} into your account?`)) return;
+      const { ok, data } = await api('POST', '/api/sync/import', { version: '2.0', conversations: guest });
+      if (ok) showToast(`Imported ${data.imported} chat${data.imported === 1 ? '' : 's'}`, 'success');
+      else showToast('Import failed.', 'error');
+    }
+
+    // Thin facade routing conversation writes to the server when logged in.
+    // Local remains the offline cache; the server is source of truth.
+    const ConversationStore = {
+      mirrorCreate(convo) {
+        if (!authState.user || !convo) return;
+        api('POST', '/api/conversations', { id: convo.id, title: convo.title, model: convo.model || apiConfig.model });
+      },
+      mirrorPatch(id, fields) {
+        if (!authState.user) return;
+        api('PATCH', '/api/conversations/' + encodeURIComponent(id), fields);
+      },
+      mirrorDelete(id) {
+        if (!authState.user) return;
+        api('DELETE', '/api/conversations/' + encodeURIComponent(id));
+      },
+      async pullAll() {
+        if (!authState.user) return;
+        const list = await api('GET', '/api/conversations');
+        if (!list.ok || !Array.isArray(list.data.conversations)) return;
+        for (const meta of list.data.conversations) {
+          const full = await api('GET', '/api/conversations/' + encodeURIComponent(meta.id));
+          if (full.ok && full.data.conversation) {
+            const c = full.data.conversation;
+            conversations[c.id] = {
+              id: c.id,
+              title: c.title || 'New Chat',
+              messages: c.messages || [],
+              created: c.created,
+              updated: c.updated,
+              tokenCount: c.tokenCount || 0,
+              pinned: !!c.pinned,
+            };
+          }
+        }
+        saveAllConversations();
+        if (activeConversationId && conversations[activeConversationId]) {
+          await switchConversation(activeConversationId);
+        } else {
+          const ids = Object.keys(conversations);
+          if (ids.length) await switchConversation(ids[0]);
+        }
+        renderConversationList();
+      },
+    };
+
+    async function onAuthed(user, opts = {}) {
+      authState.user = user;
+      updateAccountButton();
+      updateAuthModalView();
+      closeAuthModal();
+      suppressAutoCreate = true;
+      reloadConversations();
+      if (opts.promptImport) await maybeOfferImport();
+      await ConversationStore.pullAll();
+      suppressAutoCreate = false;
+      // Account with no conversations yet → start a fresh one.
+      if (Object.keys(conversations).length === 0) {
+        const id = createConversation();
+        activeConversationId = id;
+        await switchConversation(id);
+      }
+    }
+
+    async function submitAuth(e) {
+      if (e) e.preventDefault();
+      const username = authUsername.value.trim();
+      const password = authPassword.value;
+      const email = authEmail.value.trim();
+      if (!username || !password) { showToast('Enter a username and password.', 'error'); return; }
+      authSubmit.disabled = true;
+      const path = authMode === 'register' ? '/api/auth/register' : '/api/auth/login';
+      const body = authMode === 'register'
+        ? { username, password, email: email || undefined }
+        : { username, password };
+      const { ok, data } = await api('POST', path, body);
+      authSubmit.disabled = false;
+      if (!ok) { showToast(data.error || 'Authentication failed.', 'error'); return; }
+      authPassword.value = '';
+      await onAuthed(data.user, { promptImport: true });
+      showToast('Signed in as ' + data.user.username, 'success');
+    }
+
+    async function doLogout() {
+      await api('POST', '/api/auth/logout');
+      authState.user = null;
+      updateAccountButton();
+      updateAuthModalView();
+      closeAuthModal();
+      reloadConversations();
+      showToast('Logged out', 'success');
+    }
+
+    // Non-blocking session restore: fired after focus; never gates first paint.
+    async function initAuth() {
+      const { ok, data } = await api('GET', '/api/auth/me');
+      if (ok && data.user) await onAuthed(data.user, { promptImport: false });
+    }
+
+    if (accountBtn) accountBtn.addEventListener('click', openAuthModal);
+    if (authClose) authClose.addEventListener('click', closeAuthModal);
+    if (authModal) authModal.addEventListener('click', (e) => { if (e.target === authModal) closeAuthModal(); });
+    if (authTabLogin) authTabLogin.addEventListener('click', () => setAuthMode('login'));
+    if (authTabRegister) authTabRegister.addEventListener('click', () => setAuthMode('register'));
+    if (authForm) authForm.addEventListener('submit', submitAuth);
+    if (authGuest) authGuest.addEventListener('click', closeAuthModal);
+    if (authLogout) authLogout.addEventListener('click', doLogout);
+
     if (!isKnownModel(apiConfig.model)) apiConfig.model = DEFAULT_MODEL;
     loadDrafts();
     
@@ -3562,6 +3838,9 @@
     updateScrollToBottomVisibility();
     // Non-blocking: hide models whose server-side key isn't configured.
     fetchModelAvailability();
+    // Non-blocking: restore session (if any) and sync conversations. Runs after
+    // the textarea is already focused/typeable, so it never blocks instant write.
+    initAuth();
 </script>
   <script src="prism.js"></script>
 </body>

@@ -1,0 +1,19 @@
+# Cloudflare Static Assets headers (ported from netlify.toml).
+# Applied to responses served by env.ASSETS; /api/* responses set their own.
+
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# TWA Digital Asset Links must be served as JSON. Cloudflare already infers
+# application/json from the .json extension; this pins it explicitly.
+/.well-known/*
+  Content-Type: application/json
+
+# Long-lived, content-stable vendored assets.
+/prism.css
+  Cache-Control: public, max-age=31536000
+/prism.js
+  Cache-Control: public, max-age=31536000

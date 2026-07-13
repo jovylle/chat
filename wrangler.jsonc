@@ -1,0 +1,40 @@
+{
+  // Chat Assistant Box — single Worker serves the static PWA + the /api/* backend.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chat-assistant-box",
+  "main": "worker/index.js",
+  "compatibility_date": "2025-04-01",
+
+  // Static Assets: serve public/ verbatim. The Worker runs *first* only for
+  // /api/*, so static hits never spin up the Worker. SPA fallback serves
+  // index.html for unknown non-asset paths (replaces the Netlify /* → / rewrite).
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"],
+    "not_found_handling": "single-page-application"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  // D1 database (Phase 2+: accounts, conversations, messages, attachments).
+  // Create it with `wrangler d1 create chat-assistant-box` and paste the
+  // returned database_id below. Local `wrangler dev` uses a local SQLite file
+  // regardless of this id; only remote deploys need the real one.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "chat-assistant-box",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ]
+
+  // R2 bucket (Phase 4: image/file attachments for vision). Uncomment after
+  // `wrangler r2 bucket create chat-attachments`:
+  // "r2_buckets": [
+  //   { "binding": "ATTACHMENTS", "bucket_name": "chat-attachments" }
+  // ]
+}

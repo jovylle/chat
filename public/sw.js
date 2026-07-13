@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chat-assistant-box-shell-v2';
+const CACHE_NAME = 'chat-assistant-box-shell-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -33,6 +33,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  // Never cache or intercept the API (auth, chat SSE, sync). Always go to
+  // network so streaming and session cookies work correctly.
+  if (url.pathname.startsWith('/api/')) return;
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

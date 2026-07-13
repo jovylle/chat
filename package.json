@@ -1,10 +1,14 @@
 {
   "name": "chat",
   "version": "1.0.0",
-  "description": "Chat Assistant Box - Fast AI chat interface with markdown, export, and dark theme (Netlify + OpenAI)",
-  "main": "index.js",
+  "description": "Chat Assistant Box - Fast AI chat interface with markdown, export, and dark theme (Cloudflare Workers + D1 + R2)",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 migrations apply chat-assistant-box --local",
+    "db:migrate:remote": "wrangler d1 migrations apply chat-assistant-box --remote",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -16,9 +20,8 @@
     "url": "https://github.com/jovylle/chat/issues"
   },
   "homepage": "https://github.com/jovylle/chat#readme",
-  "dependencies": {
-    "express": "^4.22.1",
-    "openai": "^4.10.0",
-    "uuid": "^9.0.1"
+  "devDependencies": {
+    "vitest": "^4.1.10",
+    "wrangler": "^4.110.0"
   }
 }

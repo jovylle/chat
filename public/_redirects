@@ -1,0 +1,15 @@
+# Cloudflare Static Assets redirects.
+#
+# The SPA catch-all (Netlify's `/* -> /index.html 200`) is handled by
+# `not_found_handling: "single-page-application"` in wrangler.jsonc, so it is
+# intentionally NOT repeated here.
+#
+# Legacy HOST redirects (301) cannot live in this file: `_redirects` matches on
+# path only, not hostname. Configure them as Cloudflare **Redirect Rules**
+# (Dashboard → the uft1.com zone → Rules → Redirect Rules), one rule each:
+#
+#   quickchatgpt.uft1.com/*  -> https://chat.uft1.com/$1   (301, preserve path/query)
+#   gptfree.uft1.com/*       -> https://chat.uft1.com/$1   (301)
+#   chatgpt.uft1.com/*       -> https://chat.uft1.com/$1   (301)
+#
+# The old `quickchatgpt.netlify.app` host is dropped (Netlify-only; retired).
