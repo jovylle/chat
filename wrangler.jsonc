@@ -19,6 +19,15 @@
     "enabled": true
   },
 
+  // Production hostname: Worker Custom Domain (Cloudflare provisions the cert
+  // and route automatically; DNS is managed by Cloudflare since the zone is
+  // on this account).
+  "routes": [
+    { "pattern": "chat.uft1.com", "custom_domain": true }
+  ],
+  // Keep the workers.dev URL alive too (adding `routes` disables it by default).
+  "workers_dev": true,
+
   // D1 database (Phase 2+: accounts, conversations, messages, attachments).
   // SHARED multi-project database: this one D1 instance is co-inhabited by
   // several projects (chat, projectmate, …). Chat namespaces every table and
