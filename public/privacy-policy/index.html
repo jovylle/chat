@@ -83,7 +83,7 @@
         The messages you type and the AI responses displayed on-screen are kept in your browser’s
         <em>localStorage</em>; we do not send or retain conversation history anywhere else permanently.
         When you send a message using the default experience, the Netlify function at <code>/.netlify/functions/chat</code>
-        receives the request body (message, optional history, model, system prompt) and relays it to OpenAI or Anthropic.
+        receives the request body (message, optional history, model, system prompt) and relays it to your selected AI provider.
         The proxy briefly holds the payload to generate a response and then discards it. Exception logs may be kept
         for debugging, but we do not use them for profiling or advertising. If you enable “Use Your Own API Key,” the
         browser sends the same payload directly to your chosen provider so our proxy never sees your key.
@@ -93,8 +93,8 @@
     <section>
       <h2>Custom API keys</h2>
       <p>
-        If you enable “Use Your Own API Key,” the key is saved only inside your browser and is used to call OpenAI
-        or Anthropic directly via the public REST endpoints. The Netlify proxy is bypassed entirely in this mode,
+        If you enable “Use Your Own API Key,” the key is saved only inside your browser and is used to call your chosen
+        provider directly via its public REST endpoint. The Netlify proxy is bypassed entirely in this mode,
         so we never receive or log the custom key; clearing the app data removes it immediately. Switch the toggle
         off or clear data anytime you want to stop using a particular key.
       </p>
@@ -103,10 +103,10 @@
     <section>
       <h2>Third-party services</h2>
       <p>
-        The chat backend relies on OpenAI (GPT-3.5, GPT-4, GPT-4o) and Anthropic (Claude) to generate responses.
-        Hosting and the serverless function are provided by Netlify, which may log traffic for operational purposes.
-        Static assets load from CDNs (Font Awesome, Prism.js, etc.) to keep the UI lightweight. We only share your
-        requests with the third party you’ve chosen—OpenAI or Anthropic via their official APIs.
+        The chat backend relies on OpenAI-compatible AI providers (OpenAI, Google Gemini, DeepSeek, Qwen, GLM) to
+        generate responses. Hosting and the serverless function are provided by Netlify, which may log traffic for
+        operational purposes. Static assets load from CDNs (Font Awesome, Prism.js, etc.) to keep the UI lightweight.
+        We only share your requests with the provider you’ve chosen, via its official API.
       </p>
     </section>
 
@@ -122,9 +122,10 @@
     <section>
       <h2>Security</h2>
       <p>
-        All requests go over HTTPS, and the serverless proxy uses official SDK clients and kept-secret environment
-        variables (`MY_OPENAI_API` / `MY_CLAUDE_API`). The app never stores your custom API key on disk outside
-        your browser’s storage, and no third-party analytics or ads run inside the UI.
+        All requests go over HTTPS, and the serverless proxy uses the official OpenAI-compatible SDK client with
+        kept-secret environment variables (one per provider, e.g. `MY_OPENAI_API`, `MY_GEMINI_API`). The app never
+        stores your custom API key on disk outside your browser’s storage, and no third-party analytics or ads run
+        inside the UI.
       </p>
     </section>
 

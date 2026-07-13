@@ -10,7 +10,12 @@
 
 # Function configuration
 [functions]
-  # Functions will use default timeout (10s)
+  # `chat` is a v2 streaming function (ESM, `chat.mjs`). It returns a
+  # ReadableStream of SSE tokens. Flash-tier models emit their first byte
+  # quickly, so the default timeout is fine; raise it here if longer
+  # completions are ever needed (paid plans support up to 26s).
+  # [functions."chat"]
+  #   timeout = 26
 
 # Legacy host redirects
 [[redirects]]

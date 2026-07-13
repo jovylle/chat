@@ -5,7 +5,7 @@
   <title>Chat Assistant Box - AI Chat Assistant</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Chat Assistant Box - Fast, modern AI chat interface with markdown support and beautiful dark theme">
-  <meta name="keywords" content="AI, ChatGPT, chat, assistant, GPT-3.5, markdown">
+  <meta name="keywords" content="AI, chat, assistant, GPT-4o, Gemini, DeepSeek, Qwen, GLM, streaming, markdown">
   <meta name="author" content="jovylle">
   <meta name="theme-color" content="#0f0f0f" id="meta-theme-color">
   <link rel="manifest" href="manifest.webmanifest">
@@ -13,7 +13,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="icon" href="chat-assistant-box-icon.png" sizes="512x512" type="image/png">
   <link rel="apple-touch-icon" href="chat-assistant-box-icon.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Font Awesome loaded non-blocking so it never delays first paint -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all';this.onload=null;" />
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" /></noscript>
   
   <!-- Performance optimizations -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -1676,15 +1679,7 @@
           <button class="sidebar-toggle" id="sidebar-toggle-mobile" aria-label="Toggle sidebar" style="background: none; border: none; color: var(--text-primary); cursor: pointer; font-size: var(--icon-base); padding: 0 12px 0 0;"><i class="fa-solid fa-bars"></i></button>
           <span>Chat Assistant Box</span>
           <select class="header-model-selector" id="header-model-selector" aria-label="Select AI model">
-            <optgroup label="OpenAI">
-              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-              <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16k</option>
-              <option value="gpt-4o-mini">GPT-4o Mini</option>
-            </optgroup>
-            <optgroup label="Claude">
-              <option value="claude-3-haiku-20240307">Claude 3 Haiku</option>
-              <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-            </optgroup>
+            <!-- Options populated from the MODELS registry at runtime -->
           </select>
         </div>
         <div class="header-actions">
@@ -1728,21 +1723,13 @@
       <!-- API Key Section -->
       <div class="settings-section">
         <h3>🔑 API Configuration</h3>
-        <p>Choose your AI model. Free service uses GPT-3.5 (our API key). Add your own key for more models.</p>
-        
+        <p>Choose your AI model. The free service uses our keys. Add your own key for direct, unmetered access.</p>
+
         <label style="display: block; margin-bottom: 8px; font-size: var(--font-sm); color: var(--text-primary); font-weight: 500;">Model</label>
         <select class="settings-select" id="model-select">
-          <optgroup label="OpenAI Models">
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16k</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-          </optgroup>
-          <optgroup label="Claude Models">
-            <option value="claude-3-haiku-20240307">Claude 3 Haiku (Fastest)</option>
-            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-          </optgroup>
+          <!-- Options populated from the MODELS registry at runtime -->
         </select>
-        <div class="api-key-hint" style="margin-top: 8px;">Free service: GPT-3.5, GPT-4o Mini, Claude Haiku models</div>
+        <div class="api-key-hint" style="margin-top: 8px;">Fast Flash-tier models across providers: GPT-4o Mini, Gemini, DeepSeek, Qwen, GLM.</div>
         
         <div style="margin-top: 20px;">
           <label style="display: block; margin-bottom: 8px; font-size: var(--font-sm); color: var(--text-primary); font-weight: 500;">
@@ -1768,23 +1755,16 @@
         <div id="custom-api-section" style="display: none; margin-top: 16px;">
           <label style="display: block; margin-bottom: 8px; font-size: var(--font-sm); color: var(--text-primary); font-weight: 500;">Provider</label>
           <select class="settings-select" id="api-provider">
-            <option value="openai">OpenAI (GPT-3.5, GPT-4, GPT-4o)</option>
-            <option value="anthropic">Anthropic (Claude) - Coming Soon</option>
-            <option value="groq">Groq - Coming Soon</option>
+            <!-- Options populated from the PROVIDERS registry at runtime -->
           </select>
 
           <label style="display: block; margin: 16px 0 8px; font-size: var(--font-sm); color: var(--text-primary); font-weight: 500;">API Key</label>
           <input type="password" class="settings-input" id="api-key-input" placeholder="sk-...">
-          <div class="api-key-hint">Your API key is stored locally and never sent to our servers.</div>
+          <div class="api-key-hint">Your API key is stored locally and sent straight to the provider — never to our servers.</div>
 
           <label style="display: block; margin: 16px 0 8px; font-size: var(--font-sm); color: var(--text-primary); font-weight: 500;">Custom Model</label>
           <select class="settings-select" id="custom-model-select">
-            <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-            <option value="gpt-3.5-turbo-16k">GPT-3.5 Turbo 16k</option>
-            <option value="gpt-4o-mini">GPT-4o Mini</option>
-            <option value="gpt-4o">GPT-4o</option>
-            <option value="gpt-4">GPT-4</option>
-            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <!-- Options populated from the MODELS registry at runtime -->
           </select>
         </div>
       </div>
@@ -1813,7 +1793,7 @@
           Privacy policy: <a href="/privacy-policy/" style="color: var(--accent-color);" target="_blank" rel="noopener noreferrer">chat.uft1.com/privacy-policy/</a>
         </p>
         <p style="font-size: var(--font-xs);">
-          Enable "Use Your Own API Key" in the settings to keep your OpenAI or Anthropic credentials on-device while still powering the chat interface.
+          Enable "Use Your Own API Key" in the settings to keep your provider credentials on-device while still powering the chat interface.
         </p>
       </div>
     </div>
@@ -1828,6 +1808,36 @@
     const MAX_CHARS = 2000;
     const APP_VERSION = '1.0.0-dev';
     const APP_PATCH = 'patch-2';
+
+    // --- Model & provider registry -------------------------------------------
+    // Adding a model later = one line here (and, for the proxy path, its key env
+    // in the Netlify function's PROVIDERS map). Every provider is OpenAI-compatible.
+    const PROVIDER_LABELS = {
+      openai:   'OpenAI',
+      gemini:   'Google Gemini',
+      deepseek: 'DeepSeek',
+      qwen:     'Qwen (Alibaba)',
+      glm:      'GLM (Z.ai)',
+    };
+    // Base URLs used only by the custom-key path (browser → provider directly).
+    const PROVIDER_BASE_URLS = {
+      openai:   'https://api.openai.com/v1',
+      gemini:   'https://generativelanguage.googleapis.com/v1beta/openai',
+      deepseek: 'https://api.deepseek.com',
+      qwen:     'https://dashscope-us.aliyuncs.com/compatible-mode/v1',
+      glm:      'https://api.z.ai/api/paas/v4',
+    };
+    const MODELS = [
+      { slug: 'gpt-4o-mini',       label: 'GPT-4o Mini',       provider: 'openai'   },
+      { slug: 'gemini-2.5-flash',  label: 'Gemini 2.5 Flash',  provider: 'gemini'   },
+      { slug: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', provider: 'deepseek' },
+      { slug: 'qwen-flash',        label: 'Qwen Flash',        provider: 'qwen'     },
+      { slug: 'glm-4.6',           label: 'GLM 4.6',           provider: 'glm'      },
+    ];
+    const DEFAULT_MODEL = 'gpt-4o-mini';
+    const MAX_OUTPUT_TOKENS = 4096;
+    function isKnownModel(slug) { return MODELS.some(m => m.slug === slug); }
+    function getModel(slug) { return MODELS.find(m => m.slug === slug); }
     const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
     
     // Conversation management
@@ -1977,7 +1987,7 @@
       useCustomKey: false,
       provider: 'openai',
       apiKey: '',
-      model: 'gpt-3.5-turbo',
+      model: DEFAULT_MODEL,
       systemPrompt: ''
     };
 
@@ -2002,6 +2012,79 @@
 
     const customModelSelect = document.getElementById('custom-model-select');
     const systemPromptTextarea = document.getElementById('system-prompt');
+
+    // Build a model <select> from the registry, optionally grouped by provider.
+    function populateModelSelect(selectEl, { grouped = true } = {}) {
+      if (!selectEl) return;
+      const previous = selectEl.value;
+      selectEl.innerHTML = '';
+      if (grouped) {
+        const byProvider = {};
+        MODELS.forEach(m => { (byProvider[m.provider] = byProvider[m.provider] || []).push(m); });
+        Object.keys(byProvider).forEach(p => {
+          const og = document.createElement('optgroup');
+          og.label = PROVIDER_LABELS[p] || p;
+          byProvider[p].forEach(m => og.appendChild(new Option(m.label, m.slug)));
+          selectEl.appendChild(og);
+        });
+      } else {
+        MODELS.forEach(m => selectEl.appendChild(new Option(m.label, m.slug)));
+      }
+      if (previous && isKnownModel(previous)) selectEl.value = previous;
+    }
+
+    function populateProviderSelect(selectEl) {
+      if (!selectEl) return;
+      selectEl.innerHTML = '';
+      Object.keys(PROVIDER_LABELS).forEach(p => {
+        selectEl.appendChild(new Option(PROVIDER_LABELS[p], p));
+      });
+    }
+
+    function populateAllModelSelects() {
+      populateModelSelect(modelSelect);
+      populateModelSelect(headerModelSelect);
+      populateModelSelect(customModelSelect, { grouped: false });
+      populateProviderSelect(apiProviderSelect);
+    }
+
+    // Disable proxy models whose server-side key isn't configured, and switch
+    // off an unavailable current selection. Custom-key path is unaffected.
+    function applyModelAvailability(providers) {
+      [modelSelect, headerModelSelect].forEach(sel => {
+        if (!sel) return;
+        Array.from(sel.querySelectorAll('option')).forEach(opt => {
+          const m = getModel(opt.value);
+          if (!m) return;
+          const ok = providers[m.provider] !== false;
+          opt.disabled = !ok;
+          opt.textContent = ok ? m.label : m.label + ' (unavailable)';
+        });
+      });
+      if (!apiConfig.useCustomKey) {
+        const current = getModel(apiConfig.model);
+        if (current && providers[current.provider] === false) {
+          const firstAvail = MODELS.find(m => providers[m.provider] !== false);
+          if (firstAvail) {
+            apiConfig.model = firstAvail.slug;
+            if (modelSelect) modelSelect.value = firstAvail.slug;
+            if (headerModelSelect) headerModelSelect.value = firstAvail.slug;
+            saveApiConfig();
+          }
+        }
+      }
+    }
+
+    async function fetchModelAvailability() {
+      try {
+        const res = await fetch('/.netlify/functions/chat', { method: 'GET' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.providers) applyModelAvailability(data.providers);
+      } catch (e) {
+        // Leave all models enabled; a bad key just surfaces as a friendly error.
+      }
+    }
 
     function updateApiUI() {
       customApiSwitch.classList.toggle('active', apiConfig.useCustomKey);
@@ -2186,7 +2269,7 @@
       
       localStorage.clear();
       conversations = {};
-      apiConfig = { useCustomKey: false, provider: 'openai', apiKey: '', model: 'gpt-3.5-turbo' };
+      apiConfig = { useCustomKey: false, provider: 'openai', apiKey: '', model: DEFAULT_MODEL, systemPrompt: '' };
       const newId = createConversation();
       switchConversation(newId);
       showToast('All data cleared', 'success');
@@ -2477,43 +2560,65 @@
       }
     }
 
-    function doFetch(userMessage, loadingMessageId) {
+    // Proxy path: our Netlify function re-emits {"delta":"..."} / {"error":"..."} SSE.
+    function parseProxyStreamEvent(data) {
+      const parsed = JSON.parse(data);
+      return { delta: parsed.delta || '', error: parsed.error || null };
+    }
+    // Custom-key path: raw OpenAI-compatible SSE straight from the provider.
+    function parseOpenAIStreamEvent(data) {
+      const parsed = JSON.parse(data);
+      return {
+        delta: parsed?.choices?.[0]?.delta?.content || '',
+        error: parsed?.error?.message || parsed?.error || null,
+      };
+    }
+
+    async function doFetch(userMessage, loadingMessageId) {
       currentAbortController = new AbortController();
-      
-      // Prepare request body
       const history = getActiveConversationHistory();
+
+      // Custom key → browser calls the provider directly (never our server).
+      if (apiConfig.useCustomKey && apiConfig.apiKey) {
+        return sendViaCustomKey(userMessage, history, loadingMessageId);
+      }
+
       const requestBody = {
         message: userMessage,
         history: history,
-        model: apiConfig.model, // Always send model
-        systemPrompt: apiConfig.systemPrompt // Always send custom instructions
+        model: apiConfig.model,
+        systemPrompt: apiConfig.systemPrompt,
+        provider: apiConfig.provider
       };
 
-      if (apiConfig.useCustomKey && apiConfig.apiKey) {
-        sendViaCustomKey(userMessage, history, loadingMessageId);
-        return;
-      }
+      try {
+        const response = await fetch('/.netlify/functions/chat', {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+          headers: { 'Content-Type': 'application/json' },
+          signal: currentAbortController.signal
+        });
 
-      requestBody.provider = apiConfig.provider;
-      
-      fetch('/.netlify/functions/chat', {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: { 'Content-Type': 'application/json' },
-        signal: currentAbortController.signal
-      })
-        .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
-        .then(result => handleResponseResult(result, userMessage, loadingMessageId))
-        .catch(error => handleRequestError(error, loadingMessageId));
+        if (!response.ok || !response.body) {
+          const data = await response.json().catch(() => ({}));
+          await handleResponseResult({ ok: false, status: response.status, data }, userMessage, loadingMessageId);
+          return;
+        }
+
+        await streamAssistantResponse({ response, userMessage, loadingMessageId, parseEvent: parseProxyStreamEvent });
+      } catch (error) {
+        handleRequestError(error, loadingMessageId);
+      }
     }
 
     async function sendViaCustomKey(userMessage, history, loadingMessageId) {
       const provider = apiConfig.provider;
-      if (provider !== 'openai' && provider !== 'anthropic') {
+      const baseURL = PROVIDER_BASE_URLS[provider];
+      if (!baseURL) {
         await handleResponseResult({
           ok: false,
           status: 400,
-          data: { error: `Provider "${provider}" is not supported yet.` }
+          data: { error: `Provider "${provider}" is not supported.` }
         }, userMessage, loadingMessageId);
         return;
       }
@@ -2521,8 +2626,9 @@
       const systemPrompt = apiConfig.systemPrompt || 'You are a helpful chat assistant.';
       const payload = {
         model: apiConfig.model,
-        max_tokens: 1024,
+        max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.7,
+        stream: true,
         messages: [
           { role: 'system', content: systemPrompt },
           ...history,
@@ -2530,68 +2636,123 @@
         ]
       };
 
-      if (provider === 'anthropic') {
-        payload.system = systemPrompt;
-      }
-
-      const endpoint = provider === 'anthropic'
-        ? 'https://api.anthropic.com/v1/chat/completions'
-        : 'https://api.openai.com/v1/chat/completions';
-
-      const headers = { 'Content-Type': 'application/json' };
-      if (provider === 'anthropic') {
-        headers['x-api-key'] = apiConfig.apiKey;
-      } else {
-        headers['Authorization'] = 'Bearer ' + apiConfig.apiKey;
-      }
-
       try {
-        const response = await fetch(endpoint, {
+        const response = await fetch(baseURL + '/chat/completions', {
           method: 'POST',
-          headers,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + apiConfig.apiKey
+          },
           body: JSON.stringify(payload),
           signal: currentAbortController.signal
         });
-        const data = await response.json();
-        const result = { ok: response.ok, status: response.status, data: {} };
 
-        if (response.ok) {
-          const aiMessage = provider === 'anthropic'
-            ? extractAnthropicMessage(data)
-            : data?.choices?.[0]?.message?.content;
-
-          if (aiMessage) {
-            result.data.message = aiMessage;
-          } else {
-            result.data.error = 'No response from the AI.';
-          }
-        } else {
-          result.data.error = data?.error?.message || data?.error || 'Request failed';
+        if (!response.ok || !response.body) {
+          const data = await response.json().catch(() => ({}));
+          const errorMsg = data?.error?.message || data?.error || 'Request failed';
+          await handleResponseResult({ ok: false, status: response.status, data: { error: errorMsg } }, userMessage, loadingMessageId);
+          return;
         }
 
-        await handleResponseResult(result, userMessage, loadingMessageId);
+        await streamAssistantResponse({ response, userMessage, loadingMessageId, parseEvent: parseOpenAIStreamEvent });
       } catch (error) {
         handleRequestError(error, loadingMessageId);
       }
     }
 
-    function extractAnthropicMessage(data) {
-      const choice = data?.choices?.[0];
-      if (choice?.message?.content) {
-        const content = choice.message.content;
-        if (typeof content === 'string') return content;
-        if (Array.isArray(content)) {
-          return content.map(part => {
-            if (typeof part === 'string') return part;
-            return part?.text || part?.value || '';
-          }).join('');
+    // Consume an SSE stream into the loading bubble, rendering tokens as they
+    // arrive (throttled) and finalizing markdown + highlighting on completion.
+    async function streamAssistantResponse({ response, userMessage, loadingMessageId, parseEvent }) {
+      await loadMarked();
+      const loadingElement = document.getElementById(loadingMessageId);
+      if (!loadingElement) return;
+
+      loadingElement.classList.remove('loading-yet');
+      loadingElement.classList.add('ai-message');
+      loadingElement.innerHTML = '';
+      const aiMessageContent = document.createElement('div');
+      aiMessageContent.className = 'ai-message-content';
+      const contentDiv = document.createElement('div');
+      aiMessageContent.appendChild(contentDiv);
+      loadingElement.appendChild(aiMessageContent);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let fullText = '';
+      let streamError = null;
+      let aborted = false;
+      let renderTimer = null;
+
+      const renderNow = () => { contentDiv.innerHTML = marked.parse(fullText); scrollToBottom(); };
+      const scheduleRender = () => {
+        if (renderTimer) return;
+        renderTimer = setTimeout(() => { renderTimer = null; renderNow(); }, 60);
+      };
+
+      try {
+        let streaming = true;
+        while (streaming) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          let idx;
+          while ((idx = buffer.indexOf('\n\n')) !== -1) {
+            const rawEvent = buffer.slice(0, idx);
+            buffer = buffer.slice(idx + 2);
+            for (const rawLine of rawEvent.split('\n')) {
+              const line = rawLine.trim();
+              if (!line.startsWith('data:')) continue;
+              const data = line.slice(5).trim();
+              if (!data) continue;
+              if (data === '[DONE]') { streaming = false; break; }
+              let parsed;
+              try { parsed = parseEvent(data); } catch { parsed = null; }
+              if (parsed && parsed.error) { streamError = parsed.error; streaming = false; break; }
+              if (parsed && parsed.delta) { fullText += parsed.delta; scheduleRender(); }
+            }
+            if (!streaming) break;
+          }
         }
-        if (typeof content === 'object') {
-          return content.text || content.value || '';
-        }
+      } catch (error) {
+        if (error && error.name === 'AbortError') aborted = true;
+        else streamError = streamError || 'Connection error during streaming.';
       }
-      if (typeof data?.completion === 'string') return data.completion;
-      return null;
+
+      if (renderTimer) { clearTimeout(renderTimer); renderTimer = null; }
+
+      if (!fullText && aborted) {
+        contentDiv.innerHTML = marked.parse('*Generation stopped.*');
+        finalizeAiBubble(aiMessageContent, contentDiv, false);
+      } else if (!fullText && streamError) {
+        contentDiv.innerHTML = marked.parse('**Error:** ' + streamError);
+        finalizeAiBubble(aiMessageContent, contentDiv, false);
+        showToast(streamError, 'error');
+      } else if (!fullText) {
+        contentDiv.innerHTML = marked.parse('**Error:** No response from the AI.');
+        finalizeAiBubble(aiMessageContent, contentDiv, false);
+        showToast('No response from the AI.', 'error');
+      } else {
+        renderNow();
+        finalizeAiBubble(aiMessageContent, contentDiv, true);
+        updateActiveConversation(userMessage, fullText);
+        lastFailedUserMessage = null;
+        if (streamError) showToast(streamError, 'error'); // partial response + late error
+      }
+
+      setSendLoading(false);
+      updateCharCounter();
+      scrollToBottom();
+    }
+
+    function finalizeAiBubble(aiMessageContent, contentDiv, showRegenerate) {
+      const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      aiMessageContent.appendChild(createAiMessageFooter(timestamp, showRegenerate, contentDiv.textContent || ''));
+      aiMessageContent.appendChild(createQuickReplies());
+      if (typeof Prism !== 'undefined') {
+        installCodeCopyButtons(contentDiv);
+        contentDiv.querySelectorAll('pre code').forEach(el => Prism.highlightElement(el));
+      }
     }
 
     async function handleResponseResult({ ok, status, data }, userMessage, loadingMessageId) {
@@ -3233,10 +3394,10 @@
         themeToggle.setAttribute('aria-label', (t === 'light') ? 'Switch to dark mode' : 'Switch to light mode');
       }
 
-      // Default back to OpenAI free model when not using custom key
-      if (!apiConfig.useCustomKey) {
-        apiConfig.provider = 'openai';
-        apiConfig.model = 'gpt-3.5-turbo';
+      // Keep the model selection valid; only fall back to the default if the
+      // stored model is no longer in the registry (e.g. a dropped Claude slug).
+      if (!apiConfig.useCustomKey && !isKnownModel(apiConfig.model)) {
+        apiConfig.model = DEFAULT_MODEL;
         if (headerModelSelect) headerModelSelect.value = apiConfig.model;
         if (modelSelect) modelSelect.value = apiConfig.model;
         saveApiConfig();
@@ -3367,7 +3528,9 @@
     newConversationBtn.addEventListener('click', clearChat);
 
     // Initialize
+    populateAllModelSelects();
     loadApiConfig();
+    if (!isKnownModel(apiConfig.model)) apiConfig.model = DEFAULT_MODEL;
     loadDrafts();
     
     // Restore sidebar state - default to collapsed on all screens
@@ -3391,9 +3554,15 @@
     userInput.focus();
     updateCharCounter();
     applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+    // Reflect the stored model in every selector now that options exist.
+    if (modelSelect) modelSelect.value = apiConfig.model;
+    if (headerModelSelect) headerModelSelect.value = apiConfig.model;
+    if (customModelSelect) customModelSelect.value = apiConfig.model;
     loadAllConversations();
     updateScrollToBottomVisibility();
-  </script>
+    // Non-blocking: hide models whose server-side key isn't configured.
+    fetchModelAvailability();
+</script>
   <script src="prism.js"></script>
 </body>
 

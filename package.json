@@ -17,7 +17,6 @@
   },
   "homepage": "https://github.com/jovylle/chat#readme",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.32.1",
     "express": "^4.22.1",
     "openai": "^4.10.0",
     "uuid": "^9.0.1"
