@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chat-assistant-box-shell-v3';
+const CACHE_NAME = 'chat-assistant-box-shell-v4';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
